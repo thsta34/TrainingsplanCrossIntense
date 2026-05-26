@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-plan-v59";
+const CACHE_NAME = "training-plan-v60";
 const ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
