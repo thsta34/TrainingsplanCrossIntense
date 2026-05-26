@@ -40,6 +40,7 @@ const defaultExerciseModes = Object.fromEntries(exerciseCatalog.map((exercise) =
 
 const storageKey = "training-cycle-state-v3";
 const legacyKey = "training-block-10-state-v2";
+const registrationEnabledKey = "training-registration-enabled";
 const supabaseUrl = "https://rkvjktevdmlikzrcewel.supabase.co";
 const supabaseKey = "sb_publishable_VrCUoJ0oDHZLjY4my5dVHA_r91_cWSc";
 const supabaseClient = window.supabase?.createClient(supabaseUrl, supabaseKey);
@@ -311,9 +312,13 @@ function withTimeout(promise, timeoutMs) {
 
 function renderAuth() {
   const signedIn = Boolean(syncUser);
+  const registrationEnabled = localStorage.getItem(registrationEnabledKey) === "true";
   document.querySelector("#auth-fields").hidden = signedIn;
   document.querySelector("#session-fields").hidden = !signedIn;
   document.querySelector("#session-email").textContent = syncUser?.email || "";
+  document.querySelector("#sign-up").hidden = !registrationEnabled;
+  document.querySelector("#registration-toggle").checked = registrationEnabled;
+  document.querySelector("#registration-toggle-row").hidden = signedIn;
   if (!signedIn) {
     setSyncStatus(supabaseClient ? "Nicht verbunden" : "Supabase nicht geladen");
   }
@@ -2181,6 +2186,10 @@ document.querySelector("#skip-session").addEventListener("click", () => {
 });
 document.querySelector("#sign-in").addEventListener("click", signIn);
 document.querySelector("#sign-up").addEventListener("click", signUp);
+document.querySelector("#registration-toggle").addEventListener("change", (event) => {
+  localStorage.setItem(registrationEnabledKey, event.target.checked ? "true" : "false");
+  renderAuth();
+});
 document.querySelector("#auth-action").addEventListener("click", signOut);
 document.querySelector("#sync-now").addEventListener("click", pullRemoteState);
 
