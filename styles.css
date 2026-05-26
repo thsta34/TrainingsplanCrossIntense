@@ -150,9 +150,32 @@ body {
 .topbar {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 14px;
   padding: 18px;
+}
+
+.brand-logo {
+  flex: 0 0 84px;
+  width: 84px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
+
+.topbar-title {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .eyebrow,
@@ -869,8 +892,9 @@ textarea {
 
 @media (max-width: 430px) {
   .topbar {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 72px 1fr;
   }
 
   .app-tabs {
@@ -893,7 +917,13 @@ textarea {
   }
 
   .date-pill {
+    grid-column: 1 / -1;
     width: 100%;
+  }
+
+  .brand-logo {
+    width: 72px;
+    height: 56px;
   }
 
   .set-row {
