@@ -318,7 +318,7 @@ function renderAuth() {
   document.querySelector("#session-email").textContent = syncUser?.email || "";
   document.querySelector("#sign-up").hidden = !registrationEnabled;
   document.querySelector("#registration-toggle").checked = registrationEnabled;
-  document.querySelector("#registration-toggle-row").hidden = signedIn;
+  document.querySelector("#registration-toggle-row").hidden = false;
   if (!signedIn) {
     setSyncStatus(supabaseClient ? "Nicht verbunden" : "Supabase nicht geladen");
   }
