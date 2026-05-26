@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111827" />
+    <title>Trainingsplan</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="topbar">
+        <div>
+          <p id="block-label" class="eyebrow"></p>
+          <h1 id="training-title"></h1>
+        </div>
+        <div id="date-pill" class="date-pill"></div>
+      </section>
+
+      <nav class="app-tabs" aria-label="App Bereich">
+        <button class="app-tab active" type="button" data-view="training">Training</button>
+        <button class="app-tab" type="button" data-view="stats">Statistik</button>
+        <button class="app-tab" type="button" data-view="settings">Settings</button>
+      </nav>
+
+      <section id="training-view" class="app-view">
+        <section id="login-required" class="empty-state gate-card" hidden>
+          <h2>Einloggen erforderlich</h2>
+          <p>Bitte melde dich in Settings an, damit deine Trainingsdaten direkt synchronisiert werden.</p>
+          <button class="secondary-button" type="button" data-view="settings">Zu Settings</button>
+        </section>
+
+        <section id="empty-plan" class="empty-state gate-card" hidden>
+          <h2>Kein Plan angelegt</h2>
+          <p>Öffne Settings und lege dein erstes Training oder Kontrastprogramm an.</p>
+          <button class="secondary-button" type="button" data-view="settings">Zu Settings</button>
+        </section>
+
+        <section class="sync-card compact-sync training-only" aria-label="Supabase Sync">
+          <div>
+            <span class="label">Sync</span>
+            <strong id="sync-status">Nicht verbunden</strong>
+          </div>
+          <button id="sync-now" class="secondary-button" type="button">Jetzt syncen</button>
+        </section>
+
+        <section class="phase-picker training-only" aria-label="Phase wechseln">
+          <label>
+            <span>Phase</span>
+            <select id="phase-select"></select>
+          </label>
+        </section>
+
+        <section class="nav-card training-only" aria-label="Training Navigation">
+          <button id="prev-session" class="icon-button" type="button" aria-label="Vorheriges Training">‹</button>
+          <div class="nav-center">
+            <span id="session-position" class="label"></span>
+            <strong id="session-status"></strong>
+          </div>
+          <button id="next-session" class="icon-button" type="button" aria-label="Nächstes Training">›</button>
+        </section>
+
+        <section class="calendar-card training-only">
+          <div class="section-head">
+            <h2>Kalender</h2>
+            <button id="toggle-calendar" class="small-icon-button" type="button" aria-label="Kalender anzeigen">+</button>
+          </div>
+          <div id="calendar-grid" class="calendar-grid" aria-label="Trainingskalender"></div>
+        </section>
+
+        <section class="status-row training-only" aria-label="Training Status">
+          <div>
+            <span class="label">Durchführung</span>
+            <strong id="occurrence-label"></strong>
+          </div>
+          <div>
+            <span class="label">Fokus</span>
+            <strong id="focus-label"></strong>
+          </div>
+        </section>
+
+        <section id="pr-callout" class="pr-callout" hidden>
+          <span>Heute ist der Personal-Record-Versuch für dieses Übungspaar.</span>
+        </section>
+
+        <section class="actions training-only">
+          <button id="complete-session" class="primary-button" type="button">Training erledigt</button>
+          <button id="skip-session" class="secondary-button" type="button">Training skippen</button>
+        </section>
+
+        <form id="workout-form" class="workout-form training-only"></form>
+
+      </section>
+
+      <section id="stats-view" class="app-view" hidden>
+        <section class="summary stats-card">
+          <div class="section-head">
+            <h2>Statistik</h2>
+            <div class="stat-toggle" aria-label="Statistik Bereich">
+              <button class="stat-toggle-button active" type="button" data-stat-mode="training">Training</button>
+              <button class="stat-toggle-button" type="button" data-stat-mode="contrast">Kontrast</button>
+            </div>
+          </div>
+          <div id="stats-grid" class="summary-grid"></div>
+        </section>
+      </section>
+
+      <section id="settings-view" class="app-view" hidden>
+        <section class="sync-card" aria-label="Supabase Sync">
+          <div class="section-head">
+            <h2>Sync</h2>
+            <span id="settings-sync-status" class="label">Nicht verbunden</span>
+          </div>
+          <p id="sync-error-detail" class="sync-error-detail" hidden></p>
+          <div id="auth-fields" class="auth-grid">
+            <label>
+              <span>E-Mail</span>
+              <input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" />
+            </label>
+            <label>
+              <span>Passwort</span>
+              <input id="auth-password" type="password" autocomplete="current-password" placeholder="Passwort" />
+            </label>
+            <button id="sign-in" class="secondary-button" type="button">Einloggen</button>
+            <button id="sign-up" class="secondary-button" type="button">Registrieren</button>
+          </div>
+          <div id="session-fields" class="session-grid" hidden>
+            <div>
+              <span class="label">Angemeldet</span>
+              <strong id="session-email"></strong>
+            </div>
+            <button id="auth-action" class="secondary-button" type="button">Ausloggen</button>
+          </div>
+        </section>
+
+        <section class="setup-card">
+          <div class="section-head">
+            <h2>Phasen</h2>
+            <span id="setup-label" class="label">Planung</span>
+          </div>
+          <div class="settings-note">
+            <strong>Phasenplanung</strong>
+            <span>Wähle ein Startdatum und den Typ. Die App berechnet daraus automatisch alle Trainingstage.</span>
+          </div>
+          <div class="phase-create">
+            <label>
+              <span>Startdatum</span>
+              <input id="new-phase-date" type="date" />
+            </label>
+            <label>
+              <span>Typ</span>
+              <select id="new-phase-type">
+                <option value="training">Training</option>
+                <option value="contrast">Kontrast</option>
+              </select>
+            </label>
+            <button id="add-phase" class="secondary-button" type="button">Phase hinzufügen</button>
+          </div>
+          <div id="phase-list" class="phase-list"></div>
+          <div id="phase-editor" hidden>
+            <div id="schedule-settings" class="schedule-settings"></div>
+            <div id="setup-grid" class="setup-grid"></div>
+          </div>
+        </section>
+
+        <section class="setup-card">
+          <div class="section-head">
+            <h2>Übungsverwaltung</h2>
+            <button id="toggle-exercise-modes" class="small-icon-button" type="button" aria-label="Übungsverwaltung anzeigen">+</button>
+          </div>
+          <div id="exercise-mode-list" class="exercise-mode-list" hidden></div>
+        </section>
+
+        <section class="setup-card danger-zone">
+          <button id="reset-app-state" class="danger-button" type="button">App zurücksetzen - ALLE Daten werden gelöscht</button>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
