@@ -110,6 +110,11 @@ body {
   overflow-wrap: anywhere;
 }
 
+.settings-sync-button {
+  margin-bottom: 12px;
+  width: 100%;
+}
+
 .auth-grid,
 .session-grid {
   display: grid;

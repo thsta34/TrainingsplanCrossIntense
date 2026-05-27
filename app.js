@@ -319,6 +319,7 @@ function renderAuth() {
   document.querySelector("#session-fields").hidden = !signedIn;
   document.querySelector("#session-email").textContent = syncUser?.email || "";
   document.querySelector("#sign-up").hidden = !registrationEnabled;
+  document.querySelector("#sync-now").hidden = !signedIn;
   document.querySelector("#registration-toggle").checked = registrationEnabled;
   document.querySelector("#registration-toggle-row").hidden = !canManageRegistration;
   if (!signedIn) {
@@ -530,6 +531,7 @@ async function signIn() {
   syncUser = data.user;
   renderAuth();
   await syncAfterSignIn();
+  setView("training");
 }
 
 async function signUp() {
@@ -547,6 +549,7 @@ async function signUp() {
   setSyncStatus(data.session ? "Registriert" : "Bitte E-Mail bestätigen");
   if (data.session) {
     await syncAfterSignIn();
+    setView("training");
   }
 }
 
