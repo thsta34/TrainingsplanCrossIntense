@@ -1584,6 +1584,7 @@ function normalizeBandChoice(event) {
   }
   if (event.target.matches("[data-band]") && event.target.checked) {
     controls.querySelector("[data-bodyweight]").checked = false;
+    controls.querySelector("[data-band-extra]").value = "";
   }
   if (event.target.matches("[data-band-extra]") && Number(event.target.value || 0) > 0) {
     controls.querySelector("[data-bodyweight]").checked = true;
