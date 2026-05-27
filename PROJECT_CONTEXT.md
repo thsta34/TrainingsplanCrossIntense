@@ -2,7 +2,7 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v75`
+Aktuelle App-/Cache-Version: `v76`
 
 ## Ziel
 
@@ -214,7 +214,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v75`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v76`.
 
 Kalender:
 

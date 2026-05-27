@@ -1587,19 +1587,25 @@ function safeSyncFromInputs() {
   }
 }
 
-function normalizeBandChoice(event) {
-  const controls = event.target.closest(".band-controls");
+function bandInputFromTarget(target) {
+  return target.closest("[data-band], [data-bodyweight], [data-band-extra]") || target.closest(".band-toggle, .band-extra")?.querySelector("input");
+}
+
+function normalizeBandChoice(target) {
+  const input = bandInputFromTarget(target);
+  if (!input) return;
+  const controls = input.closest(".band-controls");
   if (!controls) return;
-  if (event.target.matches("[data-bodyweight]") && event.target.checked) {
+  if (input.matches("[data-bodyweight]") && input.checked) {
     controls.querySelectorAll("[data-band]").forEach((input) => {
       input.checked = false;
     });
   }
-  if (event.target.matches("[data-band]") && event.target.checked) {
+  if (input.matches("[data-band]") && input.checked) {
     controls.querySelector("[data-bodyweight]").checked = false;
     controls.querySelector("[data-band-extra]").value = "";
   }
-  if (event.target.matches("[data-band-extra]") && Number(event.target.value || 0) > 0) {
+  if (input.matches("[data-band-extra]") && Number(input.value || 0) > 0) {
     controls.querySelector("[data-bodyweight]").checked = true;
     controls.querySelectorAll("[data-band]").forEach((input) => {
       input.checked = false;
@@ -1888,16 +1894,17 @@ function updateAndSave() {
 }
 
 function updateWorkoutInputs(event) {
-  normalizeBandChoice(event);
+  normalizeBandChoice(event.target);
   updateAndSave();
 }
 
-function updateBandChoiceAfterClick(event) {
-  if (!event.target.closest(".band-controls")) return;
+function updateBandChoiceAfterInteraction(event) {
+  const target = event.target;
+  if (!target.closest(".band-controls")) return;
   window.setTimeout(() => {
-    normalizeBandChoice(event);
+    normalizeBandChoice(target);
     updateAndSave();
-  }, 0);
+  }, 30);
 }
 
 function refreshContrastHighlight() {
@@ -2257,13 +2264,15 @@ document.querySelector("#toggle-exercise-modes").addEventListener("click", () =>
 document.querySelector("#workout-form").addEventListener("input", updateWorkoutInputs);
 document.querySelector("#workout-form").addEventListener("change", updateWorkoutInputs);
 document.querySelector("#workout-form").addEventListener("focusout", refreshContrastHighlight);
+document.querySelector("#workout-form").addEventListener("pointerup", updateBandChoiceAfterInteraction);
+document.querySelector("#workout-form").addEventListener("touchend", updateBandChoiceAfterInteraction);
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-toggle-exercise-skip]");
   if (!button) return;
   event.preventDefault();
   toggleExerciseSkipped(button.dataset.toggleExerciseSkip);
 });
-document.querySelector("#workout-form").addEventListener("click", updateBandChoiceAfterClick);
+document.querySelector("#workout-form").addEventListener("click", updateBandChoiceAfterInteraction);
 document.querySelector("#calendar-grid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-session-index]");
   if (!button) return;
