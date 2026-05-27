@@ -1555,7 +1555,7 @@ function syncFromInputs() {
     session.exercises[code].bar = clampNumberInput(input);
   });
 
-  document.querySelectorAll("[data-set]").forEach((input) => {
+  document.querySelectorAll("input[data-set]").forEach((input) => {
     const code = input.dataset.exercise;
     if (!session.exercises[code]) return;
     session.exercises[code].sets[Number(input.dataset.set)] = input.value === "" ? "" : clampNumberInput(input);
