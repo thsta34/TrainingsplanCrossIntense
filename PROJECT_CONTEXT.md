@@ -262,6 +262,9 @@ Bekannte Problemstellen aus der Entwicklung:
 - Wenn ein Kontrastprogramm geloescht wird, duerfen globale Kontrastuebungen nicht verschwinden.
 - Wenn neue Kontrastuebungen in einer Phase erfasst werden, muessen sie auch in der globalen Liste gespeichert werden.
 - Mobile Browser feuern bei Checkboxen teils eher `change` als `input`; Band-Totals muessen auf beiden Events aktualisiert werden.
+- Android Chrome war bei Band-Checkboxen besonders heikel: Tippen auf den Label-Text liefert oft `span`/`label` als Event-Target statt den eigentlichen Input. Die App nutzt deshalb `bandInputFromTarget(...)`, um vom Event-Target auf den richtigen Input zurueckzufinden.
+- Band-Aenderungen werden fuer Mobile zusaetzlich nach `pointerup`, `touchend` und `click` mit kurzem Timeout erneut synchronisiert und gespeichert. Das ist wichtig, weil der Browser den Checkbox-Zustand teils erst nach dem Touch-Event sichtbar umschaltet.
+- Wichtig: Bei Band-Sync darf die allgemeine Satzlogik nur `input[data-set]` lesen. `.band-controls` hat ebenfalls `data-set` fuer die Satznummer, darf aber nicht als normales Zahlenfeld interpretiert werden.
 - Bei Service-Worker/Cache-Problemen hilft auf dem Handy oft eine URL mit Query-Parameter oder das Loeschen der Website-Daten.
 
 ## Wichtige Testfaelle
