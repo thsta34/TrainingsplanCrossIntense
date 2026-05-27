@@ -1887,6 +1887,19 @@ function updateAndSave() {
   saveState();
 }
 
+function updateWorkoutInputs(event) {
+  normalizeBandChoice(event);
+  updateAndSave();
+}
+
+function updateBandChoiceAfterClick(event) {
+  if (!event.target.closest(".band-controls")) return;
+  window.setTimeout(() => {
+    normalizeBandChoice(event);
+    updateAndSave();
+  }, 0);
+}
+
 function refreshContrastHighlight() {
   syncFromInputs();
   if (getCurrentSession()?.phase !== "contrast") return;
@@ -2241,20 +2254,16 @@ document.querySelector("#toggle-exercise-modes").addEventListener("click", () =>
   renderExerciseModeSettings();
 });
 
-document.querySelector("#workout-form").addEventListener("input", (event) => {
-  normalizeBandChoice(event);
-  updateAndSave();
-});
-document.querySelector("#workout-form").addEventListener("change", (event) => {
-  normalizeBandChoice(event);
-  updateAndSave();
-});
+document.querySelector("#workout-form").addEventListener("input", updateWorkoutInputs);
+document.querySelector("#workout-form").addEventListener("change", updateWorkoutInputs);
 document.querySelector("#workout-form").addEventListener("focusout", refreshContrastHighlight);
-document.querySelector("#workout-form").addEventListener("click", (event) => {
+document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-toggle-exercise-skip]");
   if (!button) return;
+  event.preventDefault();
   toggleExerciseSkipped(button.dataset.toggleExerciseSkip);
 });
+document.querySelector("#workout-form").addEventListener("click", updateBandChoiceAfterClick);
 document.querySelector("#calendar-grid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-session-index]");
   if (!button) return;
