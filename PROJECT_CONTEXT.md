@@ -2,6 +2,8 @@
 
 Stand: 27.05.2026
 
+Aktuelle App-/Cache-Version: `v73`
+
 ## Ziel
 
 Die App ist ein digitaler Trainingsplan fuer CrossIntense, nutzbar am PC und Handy. Sie laeuft als statische Web-App ueber GitHub Pages und synchronisiert Trainingsdaten via Supabase.
@@ -36,6 +38,8 @@ Nach Aenderungen:
 
 Wenn statische Assets oder gecachte Dateien geaendert werden, die Cache-Version in `sw.js` erhoehen.
 
+Die aktuelle Version wird in den Settings unten angezeigt. Wenn Handy und PC unterschiedliche Versionen zeigen, laeuft auf einem Geraet noch ein alter Browser-/Service-Worker-Cache.
+
 ## Nutzer und Login
 
 Die App soll nur nach Login bedienbar sein, damit keine lokalen Trainings versehentlich ohne Sync erfasst werden.
@@ -45,6 +49,7 @@ Besonderheit:
 - Registrierung kann in den Settings ein- und ausgeschaltet werden.
 - Diese Option ist nur sichtbar, wenn der eingeloggte User `thstaehli@gmail.com` ist.
 - Nicht eingeloggte User sehen die Registrierungsoption nicht.
+- Nach erfolgreichem Login soll die App automatisch auf den Reiter `Training` wechseln.
 
 ## Trainingslogik
 
@@ -80,6 +85,13 @@ Anzeigeformat in Kalenderkacheln:
 Das 5. Training eines Uebungspaars wird mit rotem `PR` in der Kachel markiert. Training 5 und 6 gelten im Fokus als `PR-Tag`, aber der rote Hinweis in der Kachel soll nur bei Training 5 stehen.
 
 Falls wegen Skippen weniger Trainings stattfinden, zaehlt trotzdem der beste erfasste Wert als PR/PB.
+
+Zusaetzlich zum Skippen ganzer Trainings kann eine einzelne Uebung innerhalb eines Trainings geskippt werden:
+
+- Die Einheit kann weiterhin als erledigt markiert werden.
+- Die geskippten Uebungswerte bleiben erhalten, werden aber deaktiviert/grau dargestellt.
+- Die geskippten Uebungen zaehlen nicht fuer PR/PB, Statistik oder Bestleistung.
+- In der Kalenderkachel wird eine geskippt markierte Einzeluebung durchgestrichen.
 
 ### Kontrasttraining
 
@@ -141,6 +153,16 @@ Bandlogik:
 
 Diese Logik muss auch in PB/PR-Vergleichen beruecksichtigt werden, weil es nicht immer ein reiner Zahlenwert ist.
 
+Aktuelle UI fuer Banduebungen:
+
+- Pro Satz gibt es Checkboxen fuer `Gruen`, `Rot`, `Schwarz` und `Koerper`.
+- `Koerper` bedeutet Koerpergewicht ohne Zusatzgewicht.
+- Zusatzgewicht setzt automatisch Koerpergewicht.
+- Wenn nach Koerpergewicht/Zusatzgewicht wieder ein Band gewaehlt wird, werden Koerpergewicht und Zusatzgewicht in dieser Satzzeile geloescht.
+- Das sichtbare Label ist bewusst kurz `Koerper`, intern bleibt die Bedeutung Koerpergewicht.
+- Bei allen Gewichtseingaben gilt: keine negativen Werte und maximal zwei Nachkommastellen.
+- Negative Werte werden in der Speicherlogik auf `0` geklemmt.
+
 ## Statistik
 
 Es gibt einen eigenen Reiter `Statistik`.
@@ -191,6 +213,8 @@ In den Settings:
 - Phasen sollen per Plus/Minus direkt auf- und zuklappbar sein.
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
+- Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v73`.
 
 Kalender:
 
@@ -202,6 +226,7 @@ Topbar:
 - Links ist das Logo `CIT_Logo-Schwarz.png`.
 - Klick auf das Logo fuehrt zum Trainingsreiter.
 - Text rechts neben dem Logo.
+- Favicon und PWA-Icons wurden aus dem Logo erzeugt und in HTML/Manifest/Service Worker eingebunden.
 
 ## Reset-Verhalten
 
@@ -225,7 +250,7 @@ Frueheres Problem:
 Sync soll so funktionieren:
 
 - Eingaben werden automatisch gespeichert und nach Supabase synchronisiert.
-- Auf anderem Geraet muss ggf. `Jetzt syncen` gedrueckt werden, um aktuelle Daten runterzuladen.
+- Auf anderem Geraet muss ggf. in Settings `Jetzt syncen` gedrueckt werden, um aktuelle Daten runterzuladen.
 - Es wurde diskutiert, spaeter eine Meldung `Neue Daten vorhanden, bitte synchronisieren` einzubauen. Noch nicht umgesetzt.
 
 Bekannte Problemstellen aus der Entwicklung:
@@ -236,6 +261,8 @@ Bekannte Problemstellen aus der Entwicklung:
 - Nach dem Anlegen der ersten Phase muss sie sofort sichtbar sein, nicht erst nach `Ctrl + F5`.
 - Wenn ein Kontrastprogramm geloescht wird, duerfen globale Kontrastuebungen nicht verschwinden.
 - Wenn neue Kontrastuebungen in einer Phase erfasst werden, muessen sie auch in der globalen Liste gespeichert werden.
+- Mobile Browser feuern bei Checkboxen teils eher `change` als `input`; Band-Totals muessen auf beiden Events aktualisiert werden.
+- Bei Service-Worker/Cache-Problemen hilft auf dem Handy oft eine URL mit Query-Parameter oder das Loeschen der Website-Daten.
 
 ## Wichtige Testfaelle
 
@@ -266,6 +293,13 @@ Nach groesseren Aenderungen testen:
 23. Handy erfassen, PC syncen
 24. GitHub Pages nach Push testen
 25. Service-Worker-Cache bei Asset-Aenderungen pruefen
+26. Einzelne Uebung skippen, Training erledigen, Kalender-Durchstreichung pruefen
+27. Geskippte Einzeluebung darf nicht in Statistik/PR/PB zaehlen
+28. Banduebung: Koerper ohne Zusatz als gueltiger Satz
+29. Banduebung: Zusatz setzen, danach Band waehlen; Koerper/Zusatz muessen verschwinden
+30. Mobile: Band-Totals aktualisieren sich direkt bei Checkbox-Wechsel
+31. Gewichtsfelder: keine negativen Werte und maximal zwei Nachkommastellen
+32. Settings: Version sichtbar und entspricht der Cache-Version in `sw.js`
 
 ## Hinweise fuer Codex im Buero
 
