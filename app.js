@@ -1062,7 +1062,12 @@ function exerciseNames(session) {
     return "<em>Übungen festlegen</em>";
   }
 
-  return exercises.map((exercise) => `<em>${exercise.code} - ${exercise.name}</em>`).join("");
+  return exercises
+    .map((exercise) => {
+      const isSkipped = Boolean(session.exercises?.[exercise.code]?.skipped);
+      return `<em class="${isSkipped ? "exercise-name-skipped" : ""}">${exercise.code} - ${exercise.name}</em>`;
+    })
+    .join("");
 }
 
 function renderSetup() {
