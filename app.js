@@ -2245,7 +2245,10 @@ document.querySelector("#workout-form").addEventListener("input", (event) => {
   normalizeBandChoice(event);
   updateAndSave();
 });
-document.querySelector("#workout-form").addEventListener("change", normalizeBandChoice);
+document.querySelector("#workout-form").addEventListener("change", (event) => {
+  normalizeBandChoice(event);
+  updateAndSave();
+});
 document.querySelector("#workout-form").addEventListener("focusout", refreshContrastHighlight);
 document.querySelector("#workout-form").addEventListener("click", (event) => {
   const button = event.target.closest("[data-toggle-exercise-skip]");
