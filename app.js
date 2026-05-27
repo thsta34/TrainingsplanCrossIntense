@@ -103,6 +103,19 @@ function formatKg(value) {
   return `${formatter.format(value)} kg`;
 }
 
+function nonNegativeNumber(value) {
+  return Math.max(0, Number(value || 0));
+}
+
+function clampNumberInput(input) {
+  if (input.value === "") return "";
+  const value = nonNegativeNumber(input.value);
+  if (Number(input.value) < 0) {
+    input.value = value;
+  }
+  return value;
+}
+
 const bandSupport = { green: 10, red: 4, black: 2 };
 const bandLabels = { green: "Grün", red: "Rot", black: "Schwarz" };
 
@@ -1252,7 +1265,7 @@ function renderGlobalContrastManagementRow(exercise) {
       </label>
       <label class="${exercise.mode === "barbell" ? "" : "hidden-field"}">
         <span>Stange</span>
-        <input type="number" inputmode="decimal" step="0.25" value="${exercise.bar}" data-contrast-global-key="${exercise.key}" data-contrast-global-field="bar" />
+        <input type="number" inputmode="decimal" min="0" step="0.25" value="${exercise.bar}" data-contrast-global-key="${exercise.key}" data-contrast-global-field="bar" />
       </label>
       <button class="phase-delete" type="button" data-delete-contrast-key="${exercise.key}" aria-label="${exercise.name} löschen">Löschen</button>
     </div>
@@ -1285,7 +1298,7 @@ function renderContrastSetupRow(training, exercise, index) {
       </label>
       <label class="${exercise.mode === "barbell" ? "" : "hidden-field"}">
         <span>Stange</span>
-        <input type="number" inputmode="decimal" step="0.25" value="${exercise.bar}" data-contrast-training="${training}" data-contrast-slot="${index}" data-contrast-field="bar" />
+        <input type="number" inputmode="decimal" min="0" step="0.25" value="${exercise.bar}" data-contrast-training="${training}" data-contrast-slot="${index}" data-contrast-field="bar" />
       </label>
     </div>
   `;
@@ -1406,7 +1419,7 @@ function renderExercises() {
           ? `
             <label>
               <span>Stange</span>
-              <input type="number" inputmode="decimal" step="0.25" name="${meta.code}-bar" value="${entry.bar}" data-bar="${meta.code}" ${isSkipped ? "disabled" : ""} />
+              <input type="number" inputmode="decimal" min="0" step="0.25" name="${meta.code}-bar" value="${entry.bar}" data-bar="${meta.code}" ${isSkipped ? "disabled" : ""} />
             </label>
           `
           : `
@@ -1470,6 +1483,7 @@ function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false) 
         <input
           type="number"
           inputmode="decimal"
+          min="0"
           step="0.25"
           value="${value}"
           data-exercise="${meta.code}"
@@ -1503,13 +1517,13 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
             `,
           )
           .join("")}
-        <label class="band-toggle">
+        <label class="band-toggle bodyweight-toggle">
           <input type="checkbox" data-bodyweight ${bodyweight ? "checked" : ""} ${disabled ? "disabled" : ""} />
           <span>Körpergewicht</span>
         </label>
         <label class="band-extra">
           <span>Zusatz</span>
-          <input type="number" inputmode="decimal" step="0.25" value="${value.extraWeight}" data-band-extra ${disabled ? "disabled" : ""} />
+          <input type="number" inputmode="decimal" min="0" step="0.25" value="${value.extraWeight}" data-band-extra ${disabled ? "disabled" : ""} />
         </label>
       </div>
       <div class="total" data-total="${meta.code}-${index}"></div>
@@ -1525,20 +1539,21 @@ function syncFromInputs() {
   document.querySelectorAll("[data-bar]").forEach((input) => {
     const code = input.dataset.bar;
     if (!session.exercises[code]) return;
-    session.exercises[code].bar = Number(input.value || 0);
+    session.exercises[code].bar = clampNumberInput(input);
   });
 
   document.querySelectorAll("[data-set]").forEach((input) => {
     const code = input.dataset.exercise;
     if (!session.exercises[code]) return;
-    session.exercises[code].sets[Number(input.dataset.set)] = input.value === "" ? "" : Number(input.value);
+    session.exercises[code].sets[Number(input.dataset.set)] = input.value === "" ? "" : clampNumberInput(input);
   });
 
   document.querySelectorAll(".band-controls").forEach((controls) => {
     const code = controls.dataset.exercise;
     if (!session.exercises[code]) return;
     const setIndex = Number(controls.dataset.set);
-    const extraWeight = controls.querySelector("[data-band-extra]").value;
+    const extraInput = controls.querySelector("[data-band-extra]");
+    const extraWeight = extraInput.value === "" ? "" : clampNumberInput(extraInput);
     const bodyweight = controls.querySelector("[data-bodyweight]").checked || Number(extraWeight || 0) > 0;
     const bands = bodyweight ? [] : Array.from(controls.querySelectorAll("[data-band]:checked")).map((input) => input.dataset.band);
     session.exercises[code].sets[setIndex] = { bands, bodyweight, extraWeight };
@@ -1921,7 +1936,7 @@ function updateGlobalContrastExercise(input) {
 
   const nextName = field === "name" ? input.value.trim() : source.name;
   const nextMode = field === "mode" ? input.value : source.mode;
-  const nextBar = field === "bar" ? Number(input.value || 0) : source.bar;
+  const nextBar = field === "bar" ? clampNumberInput(input) : source.bar;
   if (!nextName) return;
 
   state.contrastLibrary = normalizeContrastLibrary(
@@ -1981,7 +1996,7 @@ function updateContrastSelection(input) {
   const training = input.dataset.contrastTraining;
   const slot = Number(input.dataset.contrastSlot);
   const field = input.dataset.contrastField;
-  phase.contrastSelection[training][slot][field] = field === "bar" ? Number(input.value || 0) : input.value;
+  phase.contrastSelection[training][slot][field] = field === "bar" ? clampNumberInput(input) : input.value;
   if (field === "name") {
     const existing = collectGlobalContrastExercises().find((exercise) => contrastExerciseKey(exercise.name) === contrastExerciseKey(input.value));
     if (existing) {

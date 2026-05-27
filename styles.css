@@ -818,7 +818,7 @@ textarea {
 
 .band-controls {
   display: grid;
-  grid-template-columns: repeat(4, minmax(74px, auto)) minmax(62px, 72px);
+  grid-template-columns: repeat(3, minmax(70px, 1fr)) minmax(120px, 1.25fr) 58px;
   gap: 6px;
   align-items: end;
 }
@@ -839,9 +839,14 @@ textarea {
 }
 
 .band-toggle input {
+  flex: 0 0 auto;
   width: auto;
   min-height: auto;
   margin: 0 6px 0 0;
+}
+
+.bodyweight-toggle {
+  justify-content: flex-start;
 }
 
 .band-extra {
@@ -1000,7 +1005,11 @@ textarea {
   }
 
   .band-controls {
-    grid-template-columns: repeat(2, 1fr) minmax(62px, 72px);
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 58px;
+  }
+
+  .bodyweight-toggle {
+    grid-column: span 2;
   }
 
   .band-extra {
