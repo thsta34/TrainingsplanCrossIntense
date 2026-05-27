@@ -107,13 +107,21 @@ function nonNegativeNumber(value) {
   return Math.max(0, Number(value || 0));
 }
 
+function limitDecimalPlaces(input, places = 2) {
+  const [integerPart, decimalPart] = input.value.split(".");
+  if (decimalPart?.length > places) {
+    input.value = `${integerPart}.${decimalPart.slice(0, places)}`;
+  }
+}
+
 function clampNumberInput(input) {
   if (input.value === "") return "";
-  const value = nonNegativeNumber(input.value);
   if (Number(input.value) < 0) {
-    input.value = value;
+    input.value = "0";
+    return 0;
   }
-  return value;
+  limitDecimalPlaces(input);
+  return nonNegativeNumber(input.value);
 }
 
 const bandSupport = { green: 10, red: 4, black: 2 };
