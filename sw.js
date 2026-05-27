@@ -1,5 +1,19 @@
-const CACHE_NAME = "training-plan-v61";
-const ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./CIT_Logo-Schwarz.png"];
+const CACHE_NAME = "training-plan-v62";
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./styles.css",
+  "./app.js",
+  "./manifest.webmanifest",
+  "./CIT_Logo-Schwarz.png",
+  "./favicon.ico",
+  "./favicon-16x16.png",
+  "./favicon-32x32.png",
+  "./favicon-48x48.png",
+  "./apple-touch-icon.png",
+  "./icon-192.png",
+  "./icon-512.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
