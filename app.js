@@ -1532,7 +1532,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
           .join("")}
         <label class="band-toggle bodyweight-toggle">
           <input type="checkbox" data-bodyweight ${bodyweight ? "checked" : ""} ${disabled ? "disabled" : ""} />
-          <span>Körpergewicht</span>
+          <span>Körper</span>
         </label>
         <label class="band-extra">
           <span>Zusatz</span>

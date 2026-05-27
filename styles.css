@@ -819,12 +819,12 @@ textarea {
 }
 
 .band-set-row {
-  grid-template-columns: 74px minmax(0, 1fr) 178px;
+  grid-template-columns: 74px 1fr 150px;
 }
 
 .band-controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(62px, 0.9fr)) minmax(122px, 1.25fr) 62px;
+  grid-template-columns: repeat(4, minmax(62px, 1fr)) 62px;
   gap: 6px;
   align-items: end;
 }
@@ -869,7 +869,6 @@ textarea {
 .total {
   text-align: right;
   font-weight: 900;
-  white-space: nowrap;
 }
 
 .summary {
