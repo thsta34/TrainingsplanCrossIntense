@@ -107,7 +107,7 @@ const bandSupport = { green: 10, red: 4, black: 2 };
 const bandLabels = { green: "Grün", red: "Rot", black: "Schwarz" };
 
 function emptySetValue(mode) {
-  return mode === "bands" ? { bands: [], extraWeight: "" } : "";
+  return mode === "bands" ? { bands: [], bodyweight: false, extraWeight: "" } : "";
 }
 
 function createEmptySets(mode) {
@@ -119,6 +119,7 @@ function normalizeSetValue(mode, value) {
   if (typeof value === "object" && value !== null) {
     return {
       bands: Array.isArray(value.bands) ? value.bands : [],
+      bodyweight: Boolean(value.bodyweight),
       extraWeight: value.extraWeight ?? "",
     };
   }
@@ -127,7 +128,7 @@ function normalizeSetValue(mode, value) {
 
 function isEmptySet(value) {
   if (typeof value === "object" && value !== null) {
-    return !value.bands?.length && (value.extraWeight === "" || Number(value.extraWeight || 0) === 0);
+    return !value.bands?.length && !value.bodyweight && (value.extraWeight === "" || Number(value.extraWeight || 0) === 0);
   }
   return value === "";
 }
@@ -142,7 +143,7 @@ function bandPerformance(value) {
   return {
     support,
     extraWeight,
-    rank: extraWeight > 0 ? 2 : support === 0 ? 1 : 0,
+    rank: extraWeight > 0 ? 2 : value.bodyweight ? 1 : 0,
   };
 }
 
@@ -162,7 +163,7 @@ function formatBandValue(value) {
   const extraWeight = Number(value.extraWeight || 0);
   const bands = value.bands || [];
   if (extraWeight > 0) return `Körpergewicht + ${formatKg(extraWeight)}`;
-  if (!bands.length) return "Körpergewicht";
+  if (value.bodyweight) return "Körpergewicht";
   return bands.map((band) => bandLabels[band]).join(" + ");
 }
 
@@ -1421,10 +1422,10 @@ function renderExercises() {
               ${isSkipped ? `<p class="skip-note">Übung geskippt</p>` : prLabel || contrastBestLabel}
             </div>
             <div class="exercise-actions">
-              ${barControl}
               <button class="exercise-skip-button ${isSkipped ? "active" : ""}" type="button" data-toggle-exercise-skip="${meta.code}">
                 ${isSkipped ? "Skip aufheben" : "Übung skippen"}
               </button>
+              ${barControl}
             </div>
           </div>
           <div class="sets" aria-label="Sätze für ${meta.code}">
@@ -1486,6 +1487,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
   const setNumber = index + 1;
   const isHeavySet = index === highlightedSet;
   const bands = value.bands || [];
+  const bodyweight = Boolean(value.bodyweight);
 
   return `
     <div class="set-row band-set-row ${isHeavySet ? "heavy" : ""}">
@@ -1501,6 +1503,10 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
             `,
           )
           .join("")}
+        <label class="band-toggle">
+          <input type="checkbox" data-bodyweight ${bodyweight ? "checked" : ""} ${disabled ? "disabled" : ""} />
+          <span>Körpergewicht</span>
+        </label>
         <label class="band-extra">
           <span>Zusatz</span>
           <input type="number" inputmode="decimal" step="0.25" value="${value.extraWeight}" data-band-extra ${disabled ? "disabled" : ""} />
@@ -1532,9 +1538,10 @@ function syncFromInputs() {
     const code = controls.dataset.exercise;
     if (!session.exercises[code]) return;
     const setIndex = Number(controls.dataset.set);
-    const bands = Array.from(controls.querySelectorAll("[data-band]:checked")).map((input) => input.dataset.band);
     const extraWeight = controls.querySelector("[data-band-extra]").value;
-    session.exercises[code].sets[setIndex] = { bands, extraWeight };
+    const bodyweight = controls.querySelector("[data-bodyweight]").checked || Number(extraWeight || 0) > 0;
+    const bands = bodyweight ? [] : Array.from(controls.querySelectorAll("[data-band]:checked")).map((input) => input.dataset.band);
+    session.exercises[code].sets[setIndex] = { bands, bodyweight, extraWeight };
   });
 
   const notes = document.querySelector("#notes");
@@ -1549,6 +1556,25 @@ function safeSyncFromInputs() {
   } catch (error) {
     console.error(error);
     setSyncStatus("Eingaben konnten nicht gelesen werden");
+  }
+}
+
+function normalizeBandChoice(event) {
+  const controls = event.target.closest(".band-controls");
+  if (!controls) return;
+  if (event.target.matches("[data-bodyweight]") && event.target.checked) {
+    controls.querySelectorAll("[data-band]").forEach((input) => {
+      input.checked = false;
+    });
+  }
+  if (event.target.matches("[data-band]") && event.target.checked) {
+    controls.querySelector("[data-bodyweight]").checked = false;
+  }
+  if (event.target.matches("[data-band-extra]") && Number(event.target.value || 0) > 0) {
+    controls.querySelector("[data-bodyweight]").checked = true;
+    controls.querySelectorAll("[data-band]").forEach((input) => {
+      input.checked = false;
+    });
   }
 }
 
@@ -2186,7 +2212,11 @@ document.querySelector("#toggle-exercise-modes").addEventListener("click", () =>
   renderExerciseModeSettings();
 });
 
-document.querySelector("#workout-form").addEventListener("input", updateAndSave);
+document.querySelector("#workout-form").addEventListener("input", (event) => {
+  normalizeBandChoice(event);
+  updateAndSave();
+});
+document.querySelector("#workout-form").addEventListener("change", normalizeBandChoice);
 document.querySelector("#workout-form").addEventListener("focusout", refreshContrastHighlight);
 document.querySelector("#workout-form").addEventListener("click", (event) => {
   const button = event.target.closest("[data-toggle-exercise-skip]");

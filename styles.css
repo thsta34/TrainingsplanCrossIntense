@@ -667,12 +667,13 @@ button:disabled {
 
 .exercise-actions {
   display: grid;
+  grid-template-columns: minmax(112px, 132px) minmax(112px, 132px);
   gap: 8px;
-  min-width: 128px;
+  align-items: end;
 }
 
 .exercise-skip-button {
-  min-height: 36px;
+  min-height: 44px;
   padding: 7px 9px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -750,7 +751,7 @@ textarea {
 }
 
 .bodyweight-pill {
-  min-width: 108px;
+  min-width: 0;
   padding: 11px 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -817,7 +818,7 @@ textarea {
 
 .band-controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(74px, auto)) minmax(92px, 1fr);
+  grid-template-columns: repeat(4, minmax(74px, auto)) minmax(62px, 72px);
   gap: 6px;
   align-items: end;
 }
@@ -845,10 +846,13 @@ textarea {
 
 .band-extra {
   gap: 3px;
+  min-width: 0;
 }
 
 .band-extra input {
   min-height: 42px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .total {
@@ -996,11 +1000,11 @@ textarea {
   }
 
   .band-controls {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr) minmax(62px, 72px);
   }
 
   .band-extra {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .calendar-grid {
