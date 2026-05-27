@@ -196,6 +196,7 @@ function totalWeight(exercise, value) {
 }
 
 function bestExerciseValue(meta, entry) {
+  if (entry?.skipped) return null;
   if (!entry) return null;
   const performances = entry.sets
     .map((value) => normalizeSetValue(meta.mode, value))
@@ -205,6 +206,7 @@ function bestExerciseValue(meta, entry) {
 }
 
 function bestExerciseSet(meta, entry) {
+  if (entry?.skipped) return null;
   if (!entry) return null;
   return entry.sets
     .map((value, index) => {
@@ -220,6 +222,7 @@ function bestExerciseSet(meta, entry) {
 }
 
 function exerciseSetPerformance(meta, entry, setIndex) {
+  if (entry?.skipped) return null;
   if (!entry?.sets?.[setIndex]) return null;
   const normalized = normalizeSetValue(meta.mode, entry.sets[setIndex]);
   if (isEmptySet(normalized)) return null;
@@ -970,6 +973,7 @@ function calculatePrs(beforeDate = null) {
     const occurrence = effectiveOccurrenceInPhase(phase, index);
 
     Object.entries(session.exercises).forEach(([code, entry]) => {
+      if (entry.skipped) return;
       const meta = { ...getCatalogExercise(code), mode: entry.mode || getCatalogExercise(code)?.mode, name: entry.name || getCatalogExercise(code)?.name };
       if (!meta) return;
 
@@ -1388,6 +1392,7 @@ function renderExercises() {
     .map((meta) => {
       const entry = session.exercises[meta.code] || { bar: meta.defaultBar, sets: createEmptySets(meta.mode) };
       const displayMeta = { ...meta, mode: entry.mode || meta.mode, name: entry.name || meta.name };
+      const isSkipped = Boolean(entry.skipped);
       const highlightedSet = highlightedSetIndex(session, displayMeta, entry);
       const pr = priorPrs[meta.code];
       const prLabel = pr ? `<p class="pr-label">PR: ${formatPerformance(pr.performance || pr)} · ${formatPrDate(pr.date)}</p>` : "";
@@ -1400,7 +1405,7 @@ function renderExercises() {
           ? `
             <label>
               <span>Stange</span>
-              <input type="number" inputmode="decimal" step="0.25" name="${meta.code}-bar" value="${entry.bar}" data-bar="${meta.code}" />
+              <input type="number" inputmode="decimal" step="0.25" name="${meta.code}-bar" value="${entry.bar}" data-bar="${meta.code}" ${isSkipped ? "disabled" : ""} />
             </label>
           `
           : `
@@ -1408,17 +1413,22 @@ function renderExercises() {
           `;
 
       return `
-        <section class="exercise" data-exercise="${meta.code}">
+        <section class="exercise ${isSkipped ? "exercise-skipped" : ""}" data-exercise="${meta.code}">
           <div class="exercise-head">
             <div>
               <p class="code">${meta.code}</p>
               <h2>${displayMeta.name}</h2>
-              ${prLabel || contrastBestLabel}
+              ${isSkipped ? `<p class="skip-note">Übung geskippt</p>` : prLabel || contrastBestLabel}
             </div>
-            ${barControl}
+            <div class="exercise-actions">
+              ${barControl}
+              <button class="exercise-skip-button ${isSkipped ? "active" : ""}" type="button" data-toggle-exercise-skip="${meta.code}">
+                ${isSkipped ? "Skip aufheben" : "Übung skippen"}
+              </button>
+            </div>
           </div>
           <div class="sets" aria-label="Sätze für ${meta.code}">
-            ${entry.sets.map((value, index) => renderSetRow(displayMeta, value, index, highlightedSet)).join("")}
+            ${entry.sets.map((value, index) => renderSetRow(displayMeta, value, index, highlightedSet, isSkipped)).join("")}
           </div>
         </section>
       `;
@@ -1444,9 +1454,9 @@ function highlightedSetIndex(session, meta, entry) {
   return best ? best.setNumber - 1 : 2;
 }
 
-function renderSetRow(meta, value, index, highlightedSet = 2) {
+function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false) {
   if (meta.mode === "bands") {
-    return renderBandSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet);
+    return renderBandSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet, disabled);
   }
   const setNumber = index + 1;
   const isHeavySet = index === highlightedSet;
@@ -1463,6 +1473,7 @@ function renderSetRow(meta, value, index, highlightedSet = 2) {
           value="${value}"
           data-exercise="${meta.code}"
           data-set="${index}"
+          ${disabled ? "disabled" : ""}
         />
         <span>${suffix}</span>
       </label>
@@ -1471,7 +1482,7 @@ function renderSetRow(meta, value, index, highlightedSet = 2) {
   `;
 }
 
-function renderBandSetRow(meta, value, index, highlightedSet = 2) {
+function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = false) {
   const setNumber = index + 1;
   const isHeavySet = index === highlightedSet;
   const bands = value.bands || [];
@@ -1484,7 +1495,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2) {
           .map(
             (band) => `
               <label class="band-toggle">
-                <input type="checkbox" data-band="${band}" ${bands.includes(band) ? "checked" : ""} />
+                <input type="checkbox" data-band="${band}" ${bands.includes(band) ? "checked" : ""} ${disabled ? "disabled" : ""} />
                 <span>${bandLabels[band]}</span>
               </label>
             `,
@@ -1492,7 +1503,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2) {
           .join("")}
         <label class="band-extra">
           <span>Zusatz</span>
-          <input type="number" inputmode="decimal" step="0.25" value="${value.extraWeight}" data-band-extra />
+          <input type="number" inputmode="decimal" step="0.25" value="${value.extraWeight}" data-band-extra ${disabled ? "disabled" : ""} />
         </label>
       </div>
       <div class="total" data-total="${meta.code}-${index}"></div>
@@ -1552,6 +1563,10 @@ function updateTotals() {
     entry.sets.forEach((value, index) => {
       const target = document.querySelector(`[data-total="${code}-${index}"]`);
       if (!target) return;
+      if (entry.skipped) {
+        target.textContent = "Geskippt";
+        return;
+      }
       const normalized = normalizeSetValue(meta.mode, value);
       target.textContent = isEmptySet(normalized)
         ? "-"
@@ -1579,6 +1594,17 @@ function updateSummary() {
     .map((meta) => {
       const code = meta.code;
       const entry = session.exercises[code];
+      if (entry.skipped) {
+        return `
+          <div class="summary-card muted-card">
+            <div>
+              <span class="label">${code}</span>
+              <div>Übung geskippt</div>
+            </div>
+            <strong>-</strong>
+          </div>
+        `;
+      }
       const performances = entry.sets
         .map((value) => normalizeSetValue(meta.mode, value))
         .map((value) => (isEmptySet(value) ? null : performanceForSet(meta, entry, value)));
@@ -1612,6 +1638,7 @@ function collectTrainingStats() {
         if (session.status !== "done") return;
 
         Object.entries(session.exercises || {}).forEach(([code, entry]) => {
+          if (entry.skipped) return;
           const catalog = getCatalogExercise(code);
           const meta = {
             ...catalog,
@@ -1649,6 +1676,7 @@ function collectContrastStats() {
         if (session.status !== "done") return;
 
         Object.values(session.exercises || {}).forEach((entry) => {
+          if (entry.skipped) return;
           const name = (entry.name || "").trim();
           if (!name) return;
           const mode = entry.mode || "barbell";
@@ -1810,6 +1838,15 @@ function refreshContrastHighlight() {
   renderExercises();
   updateTotals();
   saveState();
+}
+
+function toggleExerciseSkipped(code) {
+  syncFromInputs();
+  const session = getCurrentSession();
+  if (!session?.exercises?.[code]) return;
+  session.exercises[code].skipped = !session.exercises[code].skipped;
+  saveState();
+  renderScreen();
 }
 
 function setStatus(status) {
@@ -2151,6 +2188,11 @@ document.querySelector("#toggle-exercise-modes").addEventListener("click", () =>
 
 document.querySelector("#workout-form").addEventListener("input", updateAndSave);
 document.querySelector("#workout-form").addEventListener("focusout", refreshContrastHighlight);
+document.querySelector("#workout-form").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-toggle-exercise-skip]");
+  if (!button) return;
+  toggleExerciseSkipped(button.dataset.toggleExerciseSkip);
+});
 document.querySelector("#calendar-grid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-session-index]");
   if (!button) return;
