@@ -4,6 +4,10 @@ Stand: 27.05.2026
 
 Aktuelle App-/Cache-Version: `v77`
 
+## Aenderungsprotokoll
+
+- 28.05.2026: Header erweitert. An trainingsfreien Wochentagen zeigt der Titel `Kein Training`; die kleine Header-Zeile verweist auf das naechste bzw. letzte Training. Cache-/App-Version auf `v77` erhoeht.
+
 ## Ziel
 
 Die App ist ein digitaler Trainingsplan fuer CrossIntense, nutzbar am PC und Handy. Sie laeuft als statische Web-App ueber GitHub Pages und synchronisiert Trainingsdaten via Supabase.
