@@ -6,6 +6,7 @@ Aktuelle App-/Cache-Version: `v77`
 
 ## Aenderungsprotokoll
 
+- 28.05.2026: `BEDIENUNGSANLEITUNG.md` erstellt. Die Dokumentation beschreibt Zweck, Login, Sync, Trainingserfassung, Kalender, PR/PB, Statistik, Settings, Uebungsverwaltung, Reset und typische Fragen fuer Endnutzer.
 - 28.05.2026: Header erweitert. An trainingsfreien Wochentagen zeigt der Titel `Kein Training`; die kleine Header-Zeile verweist auf das naechste bzw. letzte Training. Cache-/App-Version auf `v77` erhoeht.
 
 ## Ziel
