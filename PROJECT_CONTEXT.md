@@ -2,7 +2,7 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v76`
+Aktuelle App-/Cache-Version: `v77`
 
 ## Ziel
 

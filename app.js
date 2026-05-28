@@ -99,6 +99,15 @@ function formatPrDate(isoDate) {
   }).format(new Date(`${isoDate}T12:00:00`));
 }
 
+function isWeekday(isoDate) {
+  const day = new Date(`${isoDate}T12:00:00`).getDay();
+  return day >= 1 && day <= 5;
+}
+
+function sessionOnDate(isoDate) {
+  return state.phases.flatMap((phase) => phase.sessions).find((session) => session.date === isoDate) || null;
+}
+
 function formatKg(value) {
   return `${formatter.format(value)} kg`;
 }
@@ -1841,13 +1850,21 @@ function renderScreen() {
   const occurrence = session.phase === "training" ? effectiveOccurrenceAt(currentIndex) : session.occurrence;
   const isSkipped = session.status === "skipped";
   const isPr = session.phase === "training" && occurrence >= 5;
+  const isNoTrainingWeekday = isWeekday(today) && !sessionOnDate(today);
 
   renderPhasePicker();
 
-  document.querySelector("#block-label").textContent = `${session.phase === "training" ? "Training" : "Kontrast"} ${formatRange(range.start, range.end)} · Woche ${week}`;
-  document.querySelector("#training-title").textContent =
-    session.phase === "training" ? `Training ${session.training}` : session.training === "K1" ? "Kontrast 1" : "Kontrast 2";
-  document.querySelector("#date-pill").textContent = formatDate(session.date);
+  document.querySelector("#block-label").textContent = isNoTrainingWeekday
+    ? `${session.date > today ? "Nächstes" : "Letztes"} Training: ${formatDate(session.date)}`
+    : `${session.phase === "training" ? "Training" : "Kontrast"} ${formatRange(range.start, range.end)} · Woche ${week}`;
+  document.querySelector("#training-title").textContent = isNoTrainingWeekday
+    ? "Kein Training"
+    : session.phase === "training"
+      ? `Training ${session.training}`
+      : session.training === "K1"
+        ? "Kontrast 1"
+        : "Kontrast 2";
+  document.querySelector("#date-pill").textContent = isNoTrainingWeekday ? formatDate(today) : formatDate(session.date);
   document.querySelector("#session-position").textContent = `Training ${currentIndex + 1} / ${activeSessions().length}`;
   document.querySelector("#session-status").textContent = statusText(session.status);
   document.querySelector("#occurrence-label").textContent = session.phase === "training" ? (occurrence ? `${occurrence} / 6` : "-") : `${occurrence} / 3`;
