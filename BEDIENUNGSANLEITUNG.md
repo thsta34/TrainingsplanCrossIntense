@@ -11,7 +11,7 @@ Personal Records zu erfassen und auf mehreren Geraeten zu synchronisieren.
 
 Die App laeuft im Browser und kann auf PC und Handy genutzt werden:
 
-https://staehth.github.io/TrainingsplanCrossIntense/
+https://thsta34.github.io/TrainingsplanCrossIntense/
 
 ## 2. Grundprinzip
 

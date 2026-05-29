@@ -6,6 +6,7 @@ Aktuelle App-/Cache-Version: `v77`
 
 ## Aenderungsprotokoll
 
+- 29.05.2026: GitHub-Repository von `staehth` zu `thsta34` transferiert. GitHub Pages laeuft nun unter `https://thsta34.github.io/TrainingsplanCrossIntense/`; lokale Git-Remote auf `https://github.com/thsta34/TrainingsplanCrossIntense.git` umgestellt.
 - 28.05.2026: `BEDIENUNGSANLEITUNG.md` erstellt. Die Dokumentation beschreibt Zweck, Login, Sync, Trainingserfassung, Kalender, PR/PB, Statistik, Settings, Uebungsverwaltung, Reset und typische Fragen fuer Endnutzer.
 - 28.05.2026: Header erweitert. An trainingsfreien Wochentagen zeigt der Titel `Kein Training`; die kleine Header-Zeile verweist auf das naechste bzw. letzte Training. Cache-/App-Version auf `v77` erhoeht.
 
@@ -15,11 +16,11 @@ Die App ist ein digitaler Trainingsplan fuer CrossIntense, nutzbar am PC und Han
 
 Live-URL:
 
-https://staehth.github.io/TrainingsplanCrossIntense/
+https://thsta34.github.io/TrainingsplanCrossIntense/
 
 Repository:
 
-https://github.com/staehth/TrainingsplanCrossIntense
+https://github.com/thsta34/TrainingsplanCrossIntense
 
 ## Technischer Aufbau
 
