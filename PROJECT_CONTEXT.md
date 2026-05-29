@@ -8,6 +8,7 @@ Aktuelle App-/Cache-Version: `v78`
 
 - 29.05.2026: Supabase-Projekt auf neuen Account migriert. App nutzt nun `https://tnhwyrapdsqoklenzwjn.supabase.co` und neuen Publishable Key; Tabelle `training_app_states` mit RLS/Policies im neuen Projekt angelegt. Cache-/App-Version auf `v78` erhoeht.
 - 29.05.2026: GitHub-Repository von `staehth` zu `thsta34` transferiert. GitHub Pages laeuft nun unter `https://thsta34.github.io/TrainingsplanCrossIntense/`; lokale Git-Remote auf `https://github.com/thsta34/TrainingsplanCrossIntense.git` umgestellt.
+- 29.05.2026: Lokale Arbeitsordner bereinigt. Der aktive Arbeitsordner ist wieder `C:\git_repository\TrainingsplanCrossIntense` und zeigt auf `thsta34`; der alte lokale Clone liegt archiviert unter `C:\git_repository\TrainingsplanCrossIntense-old-staehth`.
 - 28.05.2026: `BEDIENUNGSANLEITUNG.md` erstellt. Die Dokumentation beschreibt Zweck, Login, Sync, Trainingserfassung, Kalender, PR/PB, Statistik, Settings, Uebungsverwaltung, Reset und typische Fragen fuer Endnutzer.
 - 28.05.2026: Header erweitert. An trainingsfreien Wochentagen zeigt der Titel `Kein Training`; die kleine Header-Zeile verweist auf das naechste bzw. letzte Training. Cache-/App-Version auf `v77` erhoeht.
 
@@ -221,7 +222,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v76`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v78`.
 
 Kalender:
 
@@ -319,6 +320,14 @@ Bitte zuerst immer:
 git pull
 git status --short
 ```
+
+Aktiver lokaler Arbeitsordner:
+
+```text
+C:\git_repository\TrainingsplanCrossIntense
+```
+
+Dieser Ordner muss auf `https://github.com/thsta34/TrainingsplanCrossIntense.git` zeigen. Der alte lokale `staehth`-Clone ist nur noch Archiv und soll nicht mehr fuer neue Arbeit verwendet werden.
 
 Dann Code lesen, besonders:
 
