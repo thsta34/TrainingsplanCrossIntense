@@ -2,10 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v77`
+Aktuelle App-/Cache-Version: `v78`
 
 ## Aenderungsprotokoll
 
+- 29.05.2026: Supabase-Projekt auf neuen Account migriert. App nutzt nun `https://tnhwyrapdsqoklenzwjn.supabase.co` und neuen Publishable Key; Tabelle `training_app_states` mit RLS/Policies im neuen Projekt angelegt. Cache-/App-Version auf `v78` erhoeht.
 - 29.05.2026: GitHub-Repository von `staehth` zu `thsta34` transferiert. GitHub Pages laeuft nun unter `https://thsta34.github.io/TrainingsplanCrossIntense/`; lokale Git-Remote auf `https://github.com/thsta34/TrainingsplanCrossIntense.git` umgestellt.
 - 28.05.2026: `BEDIENUNGSANLEITUNG.md` erstellt. Die Dokumentation beschreibt Zweck, Login, Sync, Trainingserfassung, Kalender, PR/PB, Statistik, Settings, Uebungsverwaltung, Reset und typische Fragen fuer Endnutzer.
 - 28.05.2026: Header erweitert. An trainingsfreien Wochentagen zeigt der Titel `Kein Training`; die kleine Header-Zeile verweist auf das naechste bzw. letzte Training. Cache-/App-Version auf `v77` erhoeht.
@@ -30,7 +31,7 @@ https://github.com/thsta34/TrainingsplanCrossIntense
 - Deployment: GitHub Pages aus Branch `main`, Ordner `/root`
 - Persistenz lokal: Browser Storage
 - Sync: Supabase
-- Supabase-Projekt-URL: `https://rkvjktevdmlikzrcewel.supabase.co`
+- Supabase-Projekt-URL: `https://tnhwyrapdsqoklenzwjn.supabase.co`
 - Supabase Publishable Key ist in `app.js` hinterlegt.
 
 Nach Aenderungen:
