@@ -261,6 +261,60 @@ Sync soll so funktionieren:
 - Auf anderem Geraet muss ggf. in Settings `Jetzt syncen` gedrueckt werden, um aktuelle Daten runterzuladen.
 - Es wurde diskutiert, spaeter eine Meldung `Neue Daten vorhanden, bitte synchronisieren` einzubauen. Noch nicht umgesetzt.
 
+## Moegliche Migration weg von Supabase
+
+Stand 04.06.2026: Supabase hat gemeldet, dass das Projekt wegen zu geringer Nutzung pausiert werden kann. Als Alternative wurde besprochen, die Synchronisation in die Datenbank des eigenen Hostings zu verschieben.
+
+Wichtig: Die App laeuft aktuell statisch ueber GitHub Pages. Eine statische Browser-App darf nicht direkt mit einer normalen Hosting-Datenbank wie MySQL/MariaDB sprechen, weil sonst DB-Host, Benutzername und Passwort im Browser sichtbar waeren.
+
+Sinnvoller Ansatz:
+
+- GitHub Pages bleibt als Frontend moeglich.
+- Auf dem Hosting wird eine kleine API bereitgestellt, z.B. mit PHP.
+- Die App spricht mit dieser API statt direkt mit Supabase.
+- Die API authentifiziert User und speichert/laedt den App-State in der Hosting-Datenbank.
+- Der bestehende JSON-State kann weiterverwendet werden, weil die App bereits den gesamten Zustand als JSON synchronisiert.
+
+Minimale API-Endpunkte:
+
+- `POST /login` - User anmelden, Session/Cookie oder Token ausstellen
+- `POST /register` - optional, falls Registrierung weiter in der App moeglich bleiben soll
+- `GET /state` - gespeicherten Trainingszustand des eingeloggten Users laden
+- `PUT /state` oder `POST /state` - Trainingszustand speichern/ueberschreiben
+- `POST /logout` - optional, Session beenden
+
+Minimales DB-Schema:
+
+```sql
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE training_app_states (
+  user_id INT PRIMARY KEY,
+  data JSON NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+```
+
+Offene Fragen vor Umsetzung:
+
+- Welches Hosting wird genutzt?
+- Gibt es PHP?
+- Gibt es MySQL oder MariaDB?
+- Koennen eigene PHP-Dateien hochgeladen werden?
+- Unter welcher URL soll die API laufen, z.B. `/training-api/` oder eigene Subdomain?
+- Soll Login per Cookie-Session oder Token geloest werden?
+- Soll die bestehende Registrierung erhalten bleiben oder nur ein fixer User angelegt werden?
+
+Alternative:
+
+- Supabase behalten und regelmaessig aktiv halten, z.B. durch gelegentliche Nutzung oder einen externen Ping. Das waere weniger Umbau, macht aber weiter von Supabase abhaengig.
+
 Bekannte Problemstellen aus der Entwicklung:
 
 - Struktur von Phasen und Uebungen wurde mehrfach geaendert. Immer auf Migration/Fallbacks achten.
