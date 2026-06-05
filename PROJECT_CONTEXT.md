@@ -6,6 +6,7 @@ Aktuelle App-/Cache-Version: `v78`
 
 ## Aenderungsprotokoll
 
+- 05.06.2026: GitHub Action `Supabase heartbeat` ergaenzt. Sie pingt alle 8 Stunden die Supabase REST API, um Free-Plan-Inaktivitaet zu vermeiden. Dafuer muss im neuen Supabase-Projekt die unten dokumentierte anonyme Heartbeat-Select-Policy gesetzt sein.
 - 29.05.2026: Supabase-Projekt auf neuen Account migriert. App nutzt nun `https://tnhwyrapdsqoklenzwjn.supabase.co` und neuen Publishable Key; Tabelle `training_app_states` mit RLS/Policies im neuen Projekt angelegt. Cache-/App-Version auf `v78` erhoeht.
 - 29.05.2026: GitHub-Repository von `staehth` zu `thsta34` transferiert. GitHub Pages laeuft nun unter `https://thsta34.github.io/TrainingsplanCrossIntense/`; lokale Git-Remote auf `https://github.com/thsta34/TrainingsplanCrossIntense.git` umgestellt.
 - 29.05.2026: Lokale Arbeitsordner bereinigt. Der aktive Arbeitsordner ist wieder `C:\git_repository\TrainingsplanCrossIntense` und zeigt auf `thsta34`; der alte lokale Clone liegt archiviert unter `C:\git_repository\TrainingsplanCrossIntense-old-staehth`.
@@ -34,6 +35,34 @@ https://github.com/thsta34/TrainingsplanCrossIntense
 - Sync: Supabase
 - Supabase-Projekt-URL: `https://tnhwyrapdsqoklenzwjn.supabase.co`
 - Supabase Publishable Key ist in `app.js` hinterlegt.
+
+## Supabase Heartbeat
+
+Es gibt eine GitHub Action:
+
+```text
+.github/workflows/supabase-heartbeat.yml
+```
+
+Sie laeuft alle 8 Stunden und kann zusaetzlich manuell unter `Actions` gestartet werden. Zweck ist, das Supabase-Free-Projekt durch echte REST-API-Aktivitaet aktiv zu halten.
+
+Damit der Heartbeat trotz Row Level Security erfolgreich ist, braucht das neue Supabase-Projekt folgende zusaetzliche Policy. Sie erlaubt anonymen Requests einen Select, gibt wegen `using (false)` aber keine Userdaten frei:
+
+```sql
+drop policy if exists "Allow anon heartbeat without exposing rows" on public.training_app_states;
+
+create policy "Allow anon heartbeat without exposing rows"
+on public.training_app_states
+for select
+to anon
+using (false);
+```
+
+Test-URL der Action:
+
+```text
+https://tnhwyrapdsqoklenzwjn.supabase.co/rest/v1/training_app_states?select=user_id&limit=1
+```
 
 Nach Aenderungen:
 
