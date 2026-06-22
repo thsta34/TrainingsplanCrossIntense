@@ -304,13 +304,14 @@ function performanceForSet(meta, entry, value) {
 
 function modeLabel(mode) {
   return {
+    barbell: "Stange",
     bands: "Bänder",
     dumbbell: "Hantel",
     kettlebell: "Kettlebell",
     cable: "Kabelzug",
     machine: "Maschine",
     bodyweight: "Körpergewicht",
-  }[mode] || "Keine Stange";
+  }[mode] || "Unbekannter Typ";
 }
 
 function setInputSuffix(mode) {

@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v79`
+Aktuelle App-/Cache-Version: `v80`
 
 ## Aenderungsprotokoll
+
+- 22.06.2026: Statistikbeschriftung fuer Uebungstyp `Stange` korrigiert. Statt des falschen Rueckfalltexts `Keine Stange` wird nun `Stange` angezeigt. Cache-/App-Version auf `v80` erhoeht.
 
 - 22.06.2026: Uebungstyp `Kettlebell` ergaenzt. Das Gewicht wird pro Kettlebell erfasst; pro Satz kann zwischen einer und zwei Kettlebells gewaehlt werden. PB/PR und Gesamtanzeige beruecksichtigen die Anzahl. Cache-/App-Version auf `v79` erhoeht.
 
@@ -254,7 +256,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v79`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v80`.
 
 Kalender:
 
