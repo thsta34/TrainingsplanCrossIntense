@@ -117,6 +117,7 @@ Pro Uebung kannst du eintragen:
 - Stangengewicht, falls die Uebung mit Stange ausgefuehrt wird
 - Werte pro Satz
 - bei Banduebungen die verwendeten Baender, Koerpergewicht und Zusatzgewicht
+- bei Kettlebell-Uebungen das Gewicht pro Kettlebell und ob eine oder zwei verwendet wurden
 
 Die App berechnet automatisch die Gesamtwerte und Bestleistungen.
 
@@ -154,6 +155,13 @@ Unterstuetzung:
 - Schwarz = weniger Unterstuetzung als Rot
 - Koerpergewicht ist staerker als Bandunterstuetzung
 - Zusatzgewicht ist staerker als reines Koerpergewicht
+
+### Kettlebell-Uebungen
+
+Bei Kettlebell-Uebungen trägst du pro Satz das Gewicht einer einzelnen
+Kettlebell ein und wählst daneben `1 Kettlebell` oder `2 Kettlebells`.
+Bei zwei Kettlebells berechnet die App die Gesamtlast automatisch, z.B.
+`16 kg × 2 = 32 kg`. Diese Gesamtlast wird auch für PB/PR verwendet.
 
 ## 6. Trainingsstatus
 
@@ -298,6 +306,7 @@ Bei Trainingsuebungen kannst du das Hilfsmittel bzw. den Typ verwalten, z.B.:
 
 - Stange
 - Hantel
+- Kettlebell
 - Baender
 - Maschine
 - Koerpergewicht

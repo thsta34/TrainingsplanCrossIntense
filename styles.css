@@ -830,6 +830,21 @@ textarea {
   grid-template-columns: 74px 1fr 150px;
 }
 
+.kettlebell-set-row {
+  grid-template-columns: 74px 1fr 180px;
+}
+
+.kettlebell-controls {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(145px, 180px);
+  gap: 8px;
+  align-items: end;
+}
+
+.kettlebell-count {
+  min-width: 0;
+}
+
 .band-controls {
   display: grid;
   grid-template-columns: repeat(4, minmax(62px, 1fr)) 62px;
@@ -1015,6 +1030,14 @@ textarea {
   }
 
   .band-set-row {
+    grid-template-columns: 1fr;
+  }
+
+  .kettlebell-set-row {
+    grid-template-columns: 1fr;
+  }
+
+  .kettlebell-controls {
     grid-template-columns: 1fr;
   }
 

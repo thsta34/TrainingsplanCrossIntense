@@ -137,7 +137,9 @@ const bandSupport = { green: 10, red: 4, black: 2 };
 const bandLabels = { green: "Grün", red: "Rot", black: "Schwarz" };
 
 function emptySetValue(mode) {
-  return mode === "bands" ? { bands: [], bodyweight: false, extraWeight: "" } : "";
+  if (mode === "bands") return { bands: [], bodyweight: false, extraWeight: "" };
+  if (mode === "kettlebell") return { weight: "", count: 1 };
+  return "";
 }
 
 function createEmptySets(mode) {
@@ -145,19 +147,26 @@ function createEmptySets(mode) {
 }
 
 function normalizeSetValue(mode, value) {
-  if (mode !== "bands") return value;
-  if (typeof value === "object" && value !== null) {
+  if (mode === "bands" && typeof value === "object" && value !== null) {
     return {
       bands: Array.isArray(value.bands) ? value.bands : [],
       bodyweight: Boolean(value.bodyweight),
       extraWeight: value.extraWeight ?? "",
     };
   }
+  if (mode === "kettlebell" && typeof value === "object" && value !== null) {
+    return {
+      weight: value.weight ?? "",
+      count: Number(value.count) === 2 ? 2 : 1,
+    };
+  }
+  if (mode !== "bands" && mode !== "kettlebell") return value;
   return emptySetValue(mode);
 }
 
 function isEmptySet(value) {
   if (typeof value === "object" && value !== null) {
+    if (Object.hasOwn(value, "weight")) return value.weight === "";
     return !value.bands?.length && !value.bodyweight && (value.extraWeight === "" || Number(value.extraWeight || 0) === 0);
   }
   return value === "";
@@ -200,6 +209,11 @@ function formatBandValue(value) {
 function formatPerformance(performance) {
   if (!performance) return "-";
   if (performance.kind === "bands") return formatBandValue(performance.raw);
+  if (performance.kind === "kettlebell") {
+    const count = performance.raw.count === 2 ? 2 : 1;
+    const weight = Number(performance.raw.weight || 0);
+    return count === 2 ? `${formatKg(weight)} × 2 = ${formatKg(weight * 2)}` : `${formatKg(weight)} × 1`;
+  }
   return formatKg(performance.value);
 }
 
@@ -219,6 +233,10 @@ function getContrastRange() {
 
 function totalWeight(exercise, value) {
   if (exercise.mode === "bands") return null;
+  if (exercise.mode === "kettlebell") {
+    const normalized = normalizeSetValue("kettlebell", value);
+    return Number(normalized.weight || 0) * normalized.count;
+  }
   if (exercise.mode === "barbell") {
     return Number(exercise.bar || 0) + Number(value || 0) * 2;
   }
@@ -271,6 +289,13 @@ function performanceForSet(meta, entry, value) {
       ...bandPerformance(value),
     };
   }
+  if (meta.mode === "kettlebell") {
+    return {
+      kind: "kettlebell",
+      raw: value,
+      value: totalWeight(meta, value),
+    };
+  }
   return {
     kind: "weight",
     value: totalWeight({ ...meta, bar: entry.bar }, value),
@@ -281,6 +306,7 @@ function modeLabel(mode) {
   return {
     bands: "Bänder",
     dumbbell: "Hantel",
+    kettlebell: "Kettlebell",
     cable: "Kabelzug",
     machine: "Maschine",
     bodyweight: "Körpergewicht",
@@ -292,6 +318,7 @@ function setInputSuffix(mode) {
     barbell: "/ Seite",
     bands: "Band/Wert",
     dumbbell: "Hantel",
+    kettlebell: "pro Kettlebell",
     cable: "Kabelzug",
     machine: "Wert",
     bodyweight: "Wert",
@@ -1197,6 +1224,7 @@ function modeOptions(selectedMode) {
   return `
     <option value="barbell" ${selectedMode === "barbell" ? "selected" : ""}>Stange</option>
     <option value="dumbbell" ${selectedMode === "dumbbell" ? "selected" : ""}>Hantel</option>
+    <option value="kettlebell" ${selectedMode === "kettlebell" ? "selected" : ""}>Kettlebell</option>
     <option value="cable" ${selectedMode === "cable" ? "selected" : ""}>Kabelzug</option>
     <option value="bands" ${selectedMode === "bands" ? "selected" : ""}>Bänder</option>
     <option value="machine" ${selectedMode === "machine" ? "selected" : ""}>Maschine</option>
@@ -1312,6 +1340,7 @@ function renderContrastSetupRow(training, exercise, index) {
         <select data-contrast-training="${training}" data-contrast-slot="${index}" data-contrast-field="mode">
           <option value="barbell" ${exercise.mode === "barbell" ? "selected" : ""}>Stange</option>
           <option value="dumbbell" ${exercise.mode === "dumbbell" ? "selected" : ""}>Hantel</option>
+          <option value="kettlebell" ${exercise.mode === "kettlebell" ? "selected" : ""}>Kettlebell</option>
           <option value="cable" ${exercise.mode === "cable" ? "selected" : ""}>Kabelzug</option>
           <option value="bands" ${exercise.mode === "bands" ? "selected" : ""}>Bänder</option>
           <option value="machine" ${exercise.mode === "machine" ? "selected" : ""}>Maschine</option>
@@ -1494,6 +1523,9 @@ function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false) 
   if (meta.mode === "bands") {
     return renderBandSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet, disabled);
   }
+  if (meta.mode === "kettlebell") {
+    return renderKettlebellSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet, disabled);
+  }
   const setNumber = index + 1;
   const isHeavySet = index === highlightedSet;
   const suffix = setInputSuffix(meta.mode);
@@ -1514,6 +1546,30 @@ function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false) 
         />
         <span>${suffix}</span>
       </label>
+      <div class="total" data-total="${meta.code}-${index}"></div>
+    </div>
+  `;
+}
+
+function renderKettlebellSetRow(meta, value, index, highlightedSet = 2, disabled = false) {
+  const setNumber = index + 1;
+  const isHeavySet = index === highlightedSet;
+  return `
+    <div class="set-row kettlebell-set-row ${isHeavySet ? "heavy" : ""}">
+      <div class="set-number">Satz ${setNumber}</div>
+      <div class="kettlebell-controls" data-exercise="${meta.code}" data-set="${index}">
+        <label class="side-input" aria-label="${meta.code} Satz ${setNumber} Gewicht pro Kettlebell">
+          <input type="number" inputmode="decimal" min="0" step="0.25" value="${value.weight}" data-kettlebell-weight ${disabled ? "disabled" : ""} />
+          <span>kg pro Kettlebell</span>
+        </label>
+        <label class="kettlebell-count">
+          <span>Anzahl</span>
+          <select data-kettlebell-count ${disabled ? "disabled" : ""}>
+            <option value="1" ${value.count === 1 ? "selected" : ""}>1 Kettlebell</option>
+            <option value="2" ${value.count === 2 ? "selected" : ""}>2 Kettlebells</option>
+          </select>
+        </label>
+      </div>
       <div class="total" data-total="${meta.code}-${index}"></div>
     </div>
   `;
@@ -1581,6 +1637,16 @@ function syncFromInputs() {
     session.exercises[code].sets[setIndex] = { bands, bodyweight, extraWeight };
   });
 
+  document.querySelectorAll(".kettlebell-controls").forEach((controls) => {
+    const code = controls.dataset.exercise;
+    if (!session.exercises[code]) return;
+    const setIndex = Number(controls.dataset.set);
+    const weightInput = controls.querySelector("[data-kettlebell-weight]");
+    const weight = weightInput.value === "" ? "" : clampNumberInput(weightInput);
+    const count = Number(controls.querySelector("[data-kettlebell-count]").value) === 2 ? 2 : 1;
+    session.exercises[code].sets[setIndex] = { weight, count };
+  });
+
   const notes = document.querySelector("#notes");
   if (notes) {
     session.notes = notes.value;
@@ -1642,7 +1708,9 @@ function updateTotals() {
         ? "-"
         : meta.mode === "bands"
           ? formatBandValue(normalized)
-          : formatKg(totalWeight({ ...meta, bar: entry.bar }, normalized));
+          : meta.mode === "kettlebell"
+            ? formatPerformance(performanceForSet(meta, entry, normalized))
+            : formatKg(totalWeight({ ...meta, bar: entry.bar }, normalized));
     });
   });
 }

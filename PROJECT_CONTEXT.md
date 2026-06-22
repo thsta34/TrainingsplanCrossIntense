@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v78`
+Aktuelle App-/Cache-Version: `v79`
 
 ## Aenderungsprotokoll
+
+- 22.06.2026: Uebungstyp `Kettlebell` ergaenzt. Das Gewicht wird pro Kettlebell erfasst; pro Satz kann zwischen einer und zwei Kettlebells gewaehlt werden. PB/PR und Gesamtanzeige beruecksichtigen die Anzahl. Cache-/App-Version auf `v79` erhoeht.
 
 - 05.06.2026: GitHub Action `Supabase heartbeat` ergaenzt. Sie pingt alle 8 Stunden die Supabase REST API, um Free-Plan-Inaktivitaet zu vermeiden. Dafuer muss im neuen Supabase-Projekt die unten dokumentierte anonyme Heartbeat-Select-Policy gesetzt sein.
 - 29.05.2026: Supabase-Projekt auf neuen Account migriert. App nutzt nun `https://tnhwyrapdsqoklenzwjn.supabase.co` und neuen Publishable Key; Tabelle `training_app_states` mit RLS/Policies im neuen Projekt angelegt. Cache-/App-Version auf `v78` erhoeht.
@@ -157,6 +159,7 @@ Bekannte Hilfsmittel:
 
 - Stange
 - Hantel
+- Kettlebell
 - Baender
 - Maschine
 - Koerpergewicht
@@ -251,7 +254,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v78`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v79`.
 
 Kalender:
 
