@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
-Stand: 28.05.2026  
-App-Version: v78
+Stand: 29.06.2026
+App-Version: v80
 
 ## 1. Zweck der App
 
@@ -60,6 +60,23 @@ Typische Nutzung:
 
 Wenn oben oder in den Settings ein Sync-Fehler erscheint, pruefe zuerst die
 Internetverbindung und versuche `Jetzt syncen` erneut.
+
+### Supabase Heartbeat
+
+Das Supabase-Projekt wird automatisch aktiv gehalten.
+
+Dafuer gibt es im GitHub-Repository eine GitHub Action:
+
+```text
+.github/workflows/supabase-heartbeat.yml
+```
+
+Sie laeuft alle 8 Stunden und pingt die Supabase REST API. Dadurch soll
+verhindert werden, dass das Supabase-Free-Projekt wegen Inaktivitaet pausiert
+wird.
+
+Du musst dafuer in der App nichts manuell machen. Wenn du den Heartbeat pruefen
+moechtest, findest du ihn in GitHub unter `Actions` als `Supabase heartbeat`.
 
 ## 4. Bereich Training
 
