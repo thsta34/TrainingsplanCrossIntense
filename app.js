@@ -113,6 +113,15 @@ function formatKg(value) {
   return `${formatter.format(value)} kg`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function nonNegativeNumber(value) {
   return Math.max(0, Number(value || 0));
 }
@@ -1158,7 +1167,7 @@ function exerciseNames(session) {
   return exercises
     .map((exercise) => {
       const isSkipped = Boolean(session.exercises?.[exercise.code]?.skipped);
-      return `<em class="${isSkipped ? "exercise-name-skipped" : ""}">${exercise.code} - ${exercise.name}</em>`;
+      return `<em class="${isSkipped ? "exercise-name-skipped" : ""}">${escapeHtml(exercise.code)} - ${escapeHtml(exercise.name)}</em>`;
     })
     .join("");
 }
@@ -1350,23 +1359,26 @@ function mergeContrastExercisesIntoLibrary(appState = state) {
 }
 
 function renderGlobalContrastManagementRow(exercise) {
+  const key = escapeHtml(exercise.key);
+  const name = escapeHtml(exercise.name);
+  const bar = escapeHtml(exercise.bar);
   return `
     <div class="contrast-row contrast-management-row">
       <label>
         <span>Kontrastübung</span>
-        <input type="text" value="${exercise.name}" placeholder="Name" data-contrast-global-key="${exercise.key}" data-contrast-global-field="name" />
+        <input type="text" value="${name}" placeholder="Name" data-contrast-global-key="${key}" data-contrast-global-field="name" />
       </label>
       <label>
         <span>Typ</span>
-        <select data-contrast-global-key="${exercise.key}" data-contrast-global-field="mode">
+        <select data-contrast-global-key="${key}" data-contrast-global-field="mode">
           ${modeOptions(exercise.mode)}
         </select>
       </label>
       <label class="${exercise.mode === "barbell" ? "" : "hidden-field"}">
         <span>Stange</span>
-        <input type="number" inputmode="decimal" min="0" step="0.25" value="${exercise.bar}" data-contrast-global-key="${exercise.key}" data-contrast-global-field="bar" />
+        <input type="number" inputmode="decimal" min="0" step="0.25" value="${bar}" data-contrast-global-key="${key}" data-contrast-global-field="bar" />
       </label>
-      <button class="phase-delete" type="button" data-delete-contrast-key="${exercise.key}" aria-label="${exercise.name} löschen">Löschen</button>
+      <button class="phase-delete" type="button" data-delete-contrast-key="${key}" aria-label="${name} löschen">Löschen</button>
     </div>
   `;
 }
@@ -1374,14 +1386,16 @@ function renderGlobalContrastManagementRow(exercise) {
 function renderContrastSetupRow(training, exercise, index) {
   const listId = `contrast-exercise-options-${training}-${index}`;
   const options = collectGlobalContrastExercises()
-    .map((item) => `<option value="${item.name}"></option>`)
+    .map((item) => `<option value="${escapeHtml(item.name)}"></option>`)
     .join("");
+  const name = escapeHtml(exercise.name);
+  const bar = escapeHtml(exercise.bar);
 
   return `
     <div class="contrast-row">
       <label>
         <span>Übung ${index + 1}</span>
-        <input type="text" value="${exercise.name}" placeholder="Name" list="${listId}" data-contrast-training="${training}" data-contrast-slot="${index}" data-contrast-field="name" />
+        <input type="text" value="${name}" placeholder="Name" list="${listId}" data-contrast-training="${training}" data-contrast-slot="${index}" data-contrast-field="name" />
         <datalist id="${listId}">${options}</datalist>
       </label>
       <label>
@@ -1398,7 +1412,7 @@ function renderContrastSetupRow(training, exercise, index) {
       </label>
       <label class="${exercise.mode === "barbell" ? "" : "hidden-field"}">
         <span>Stange</span>
-        <input type="number" inputmode="decimal" min="0" step="0.25" value="${exercise.bar}" data-contrast-training="${training}" data-contrast-slot="${index}" data-contrast-field="bar" />
+        <input type="number" inputmode="decimal" min="0" step="0.25" value="${bar}" data-contrast-training="${training}" data-contrast-slot="${index}" data-contrast-field="bar" />
       </label>
     </div>
   `;
@@ -1507,6 +1521,8 @@ function renderExercises() {
     .map((meta) => {
       const entry = session.exercises[meta.code] || { bar: meta.defaultBar, sets: createEmptySets(meta.mode) };
       const displayMeta = { ...meta, mode: entry.mode || meta.mode, name: entry.name || meta.name };
+      const safeCode = escapeHtml(meta.code);
+      const safeName = escapeHtml(displayMeta.name);
       const isSkipped = Boolean(entry.skipped);
       const highlightedSet = highlightedSetIndex(session, displayMeta, entry);
       const pr = priorPrs[meta.code];
@@ -1520,7 +1536,7 @@ function renderExercises() {
           ? `
             <label>
               <span>Stange</span>
-              <input type="number" inputmode="decimal" min="0" step="0.25" name="${meta.code}-bar" value="${entry.bar}" data-bar="${meta.code}" ${isSkipped ? "disabled" : ""} />
+              <input type="number" inputmode="decimal" min="0" step="0.25" name="${safeCode}-bar" value="${escapeHtml(entry.bar)}" data-bar="${safeCode}" ${isSkipped ? "disabled" : ""} />
             </label>
           `
           : `
@@ -1528,15 +1544,15 @@ function renderExercises() {
           `;
 
       return `
-        <section class="exercise ${isSkipped ? "exercise-skipped" : ""}" data-exercise="${meta.code}">
+        <section class="exercise ${isSkipped ? "exercise-skipped" : ""}" data-exercise="${safeCode}">
           <div class="exercise-head">
             <div>
-              <p class="code">${meta.code}</p>
-              <h2>${displayMeta.name}</h2>
+              <p class="code">${safeCode}</p>
+              <h2>${safeName}</h2>
               ${isSkipped ? `<p class="skip-note">Übung geskippt</p>` : prLabel || contrastBestLabel}
             </div>
             <div class="exercise-actions">
-              <button class="exercise-skip-button ${isSkipped ? "active" : ""}" type="button" data-toggle-exercise-skip="${meta.code}">
+              <button class="exercise-skip-button ${isSkipped ? "active" : ""}" type="button" data-toggle-exercise-skip="${safeCode}">
                 ${isSkipped ? "Skip aufheben" : "Übung skippen"}
               </button>
               ${barControl}
@@ -1556,7 +1572,7 @@ function renderExercises() {
       <section class="notes">
         <label>
           <span>Notizen</span>
-          <textarea id="notes" rows="3" placeholder="Gefühl, Technik, Besonderheiten">${session.notes || ""}</textarea>
+          <textarea id="notes" rows="3" placeholder="Gefühl, Technik, Besonderheiten">${escapeHtml(session.notes || "")}</textarea>
         </label>
       </section>
     `,
@@ -1583,20 +1599,20 @@ function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false) 
   return `
     <div class="set-row ${isHeavySet ? "heavy" : ""}">
       <div class="set-number">Satz ${setNumber}</div>
-      <label class="side-input" aria-label="${meta.code} Satz ${setNumber}">
+      <label class="side-input" aria-label="${escapeHtml(meta.code)} Satz ${setNumber}">
         <input
           type="number"
           inputmode="decimal"
           min="0"
           step="0.25"
-          value="${value}"
-          data-exercise="${meta.code}"
+          value="${escapeHtml(value)}"
+          data-exercise="${escapeHtml(meta.code)}"
           data-set="${index}"
           ${disabled ? "disabled" : ""}
         />
         <span>${suffix}</span>
       </label>
-      <div class="total" data-total="${meta.code}-${index}"></div>
+      <div class="total" data-total="${escapeHtml(meta.code)}-${index}"></div>
     </div>
   `;
 }
@@ -1607,9 +1623,9 @@ function renderKettlebellSetRow(meta, value, index, highlightedSet = 2, disabled
   return `
     <div class="set-row kettlebell-set-row ${isHeavySet ? "heavy" : ""}">
       <div class="set-number">Satz ${setNumber}</div>
-      <div class="kettlebell-controls" data-exercise="${meta.code}" data-set="${index}">
-        <label class="side-input" aria-label="${meta.code} Satz ${setNumber} Gewicht pro Kettlebell">
-          <input type="number" inputmode="decimal" min="0" step="0.25" value="${value.weight}" data-kettlebell-weight ${disabled ? "disabled" : ""} />
+      <div class="kettlebell-controls" data-exercise="${escapeHtml(meta.code)}" data-set="${index}">
+        <label class="side-input" aria-label="${escapeHtml(meta.code)} Satz ${setNumber} Gewicht pro Kettlebell">
+          <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.weight)}" data-kettlebell-weight ${disabled ? "disabled" : ""} />
           <span>kg pro Kettlebell</span>
         </label>
         <label class="kettlebell-count">
@@ -1620,7 +1636,7 @@ function renderKettlebellSetRow(meta, value, index, highlightedSet = 2, disabled
           </select>
         </label>
       </div>
-      <div class="total" data-total="${meta.code}-${index}"></div>
+      <div class="total" data-total="${escapeHtml(meta.code)}-${index}"></div>
     </div>
   `;
 }
@@ -1634,7 +1650,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
   return `
     <div class="set-row band-set-row ${isHeavySet ? "heavy" : ""}">
       <div class="set-number">Satz ${setNumber}</div>
-      <div class="band-controls" data-exercise="${meta.code}" data-set="${index}">
+      <div class="band-controls" data-exercise="${escapeHtml(meta.code)}" data-set="${index}">
         ${["green", "red", "black"]
           .map(
             (band) => `
@@ -1651,10 +1667,10 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
         </label>
         <label class="band-extra">
           <span>Zusatz</span>
-          <input type="number" inputmode="decimal" min="0" step="0.25" value="${value.extraWeight}" data-band-extra ${disabled ? "disabled" : ""} />
+          <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.extraWeight)}" data-band-extra ${disabled ? "disabled" : ""} />
         </label>
       </div>
-      <div class="total" data-total="${meta.code}-${index}"></div>
+      <div class="total" data-total="${escapeHtml(meta.code)}-${index}"></div>
     </div>
   `;
 }
@@ -1782,12 +1798,13 @@ function updateSummary() {
   summary.innerHTML = selectedExercises
     .map((meta) => {
       const code = meta.code;
+      const safeCode = escapeHtml(code);
       const entry = session.exercises[code];
       if (entry.skipped) {
         return `
           <div class="summary-card muted-card">
             <div>
-              <span class="label">${code}</span>
+              <span class="label">${safeCode}</span>
               <div>Übung geskippt</div>
             </div>
             <strong>-</strong>
@@ -1806,7 +1823,7 @@ function updateSummary() {
       return `
         <div class="summary-card">
           <div>
-            <span class="label">${code}</span>
+            <span class="label">${safeCode}</span>
             <div>Schwerster Satz: Satz 3</div>
             ${prLine}
           </div>
@@ -1930,8 +1947,8 @@ function renderStats() {
       (item) => `
         <div class="summary-card">
           <div>
-            <span class="label">${item.code}</span>
-            <div>${item.name}</div>
+            <span class="label">${escapeHtml(item.code)}</span>
+            <div>${escapeHtml(item.name)}</div>
             <div class="summary-meta">${item.setLabel}: Satz ${item.setNumber} · ${formatPrDate(item.date)}</div>
           </div>
           <strong>${formatPerformance(item.performance)}</strong>
