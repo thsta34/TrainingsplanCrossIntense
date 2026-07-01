@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v82`
+Aktuelle App-/Cache-Version: `v83`
 
 ## Aenderungsprotokoll
+
+- 01.07.2026: Sync-Schutz gegen stille Remote-Overwrites ergaenzt. Lokale Aenderungen werden mit `pendingSync`/Zeitstempeln markiert; Login/Manuell-Sync ueberschreibt ungesyncte lokale Aenderungen nicht mehr automatisch. Erfolgreiche Remote-Saves speichern `lastRemoteSyncedAt`. Cache-/App-Version auf `v83` erhoeht.
 
 - 01.07.2026: Speichern von Satzwerten weiter gehaertet. Uebungslisten werden beim Rendern/Speichern nun konsequent ueber die konkrete Session/Phase aufgeloest; neue Phasen bekommen kuenftig eindeutige Session-IDs mit Startdatum. Bestehende Session-IDs bleiben unveraendert. Cache-/App-Version auf `v82` erhoeht.
 
@@ -260,7 +262,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v82`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v83`.
 
 Kalender:
 

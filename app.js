@@ -55,6 +55,7 @@ let selectedPhaseId = null;
 let calendarExpanded = false;
 let settingsPhaseOpen = false;
 let exerciseModesOpen = false;
+let remoteUpdatedAt = null;
 
 let state = loadState();
 let initialPosition = findInitialPosition();
@@ -408,10 +409,22 @@ function serializeState() {
   return JSON.parse(JSON.stringify(state));
 }
 
+function hasPendingLocalChanges() {
+  return Boolean(state.pendingSync && state.lastLocalChangedAt);
+}
+
+function shouldProtectLocalState(remoteState, updatedAt) {
+  if (!remoteState || !hasPendingLocalChanges()) return false;
+  if (!updatedAt || !state.lastRemoteSyncedAt) return true;
+  return new Date(updatedAt).getTime() >= new Date(state.lastRemoteSyncedAt).getTime();
+}
+
 function applyRemoteState(remoteState) {
   if (!remoteState) return;
   isApplyingRemoteState = true;
   state = normalizeAppState(remoteState);
+  state.pendingSync = false;
+  state.lastRemoteSyncedAt = remoteUpdatedAt || new Date().toISOString();
   localStorage.setItem(storageKey, JSON.stringify(state));
   const position = findInitialPosition();
   currentPhase = position.phase;
@@ -440,10 +453,10 @@ async function loadRemoteState() {
   return data;
 }
 
-async function writeRemoteStateData(nextState) {
+async function writeRemoteStateData(nextState, updatedAt = new Date().toISOString()) {
   const payload = {
     data: JSON.parse(JSON.stringify(nextState)),
-    updated_at: new Date().toISOString(),
+    updated_at: updatedAt,
   };
 
   const updateResult = await withTimeout(
@@ -496,8 +509,12 @@ async function writeRemoteStateData(nextState) {
 async function saveRemoteState() {
   if (!supabaseClient || !syncUser || isApplyingRemoteState) return;
   setSyncStatus("Speichere...");
+  const updatedAt = new Date().toISOString();
+  const nextState = serializeState();
+  nextState.pendingSync = false;
+  nextState.lastRemoteSyncedAt = updatedAt;
   try {
-    await writeRemoteStateData(serializeState());
+    await writeRemoteStateData(nextState, updatedAt);
   } catch (error) {
     setLastSyncError(error);
     setSyncStatus(friendlyErrorMessage(error));
@@ -505,6 +522,10 @@ async function saveRemoteState() {
     return;
   }
 
+  state.pendingSync = false;
+  state.lastRemoteSyncedAt = updatedAt;
+  remoteUpdatedAt = updatedAt;
+  localStorage.setItem(storageKey, JSON.stringify(state));
   setLastSyncError(null);
   setSyncStatus("Synchronisiert");
 }
@@ -512,14 +533,19 @@ async function saveRemoteState() {
 async function overwriteRemoteState(nextState) {
   if (!supabaseClient || !syncUser) return;
   setSyncStatus("Speichere...");
+  const updatedAt = new Date().toISOString();
+  const payloadState = JSON.parse(JSON.stringify(nextState));
+  payloadState.pendingSync = false;
+  payloadState.lastRemoteSyncedAt = updatedAt;
   try {
-    await writeRemoteStateData(nextState);
+    await writeRemoteStateData(payloadState, updatedAt);
   } catch (error) {
     setLastSyncError(error);
     setSyncStatus(friendlyErrorMessage(error));
     console.error(error);
     return;
   }
+  remoteUpdatedAt = updatedAt;
   setLastSyncError(null);
   setSyncStatus("Synchronisiert");
 }
@@ -537,6 +563,11 @@ async function syncAfterSignIn() {
     setSyncStatus("Lade...");
     const remote = await loadRemoteState();
     if (remote?.data && Object.keys(remote.data).length) {
+      remoteUpdatedAt = remote.updated_at || null;
+      if (shouldProtectLocalState(remote.data, remote.updated_at)) {
+        setSyncStatus("Lokale Änderungen nicht überschrieben");
+        return;
+      }
       applyRemoteState(remote.data);
       setSyncStatus("Synchronisiert");
       return;
@@ -559,6 +590,11 @@ async function pullRemoteState() {
     setSyncStatus("Lade...");
     const remote = await loadRemoteState();
     if (remote?.data && Object.keys(remote.data).length) {
+      remoteUpdatedAt = remote.updated_at || null;
+      if (shouldProtectLocalState(remote.data, remote.updated_at)) {
+        setSyncStatus("Lokale Änderungen nicht überschrieben");
+        return;
+      }
       if ((!remote.data.phases || !remote.data.phases.length) && state.phases.length) {
         await saveRemoteState();
         return;
@@ -839,6 +875,9 @@ function normalizeAppState(rawState) {
   parsed.contrastSelection.K1 = normalizeContrastSlots(parsed.contrastSelection.K1);
   parsed.contrastSelection.K2 = normalizeContrastSlots(parsed.contrastSelection.K2);
   parsed.prs = parsed.prs || {};
+  parsed.pendingSync = Boolean(parsed.pendingSync);
+  parsed.lastLocalChangedAt = parsed.lastLocalChangedAt || null;
+  parsed.lastRemoteSyncedAt = parsed.lastRemoteSyncedAt || null;
   parsed.contrastLibrary = normalizeContrastLibrary(parsed.contrastLibrary || []);
   parsed.exerciseModes = { ...structuredClone(defaultExerciseModes), ...(parsed.exerciseModes || {}) };
   parsed.trainingSessions = createTrainingSessions(parsed.schedule.trainingStartDate, parsed.trainingSessions || parsed.sessions || []);
@@ -904,11 +943,15 @@ function createInitialState() {
   return initialState;
 }
 
-function saveState() {
+function saveState({ markDirty = true } = {}) {
   rebuildPrs();
   mergeContrastExercisesIntoLibrary(state);
   state.activePhase = currentPhase;
   state.selectedPhaseId = selectedPhaseId;
+  if (markDirty && !isApplyingRemoteState) {
+    state.pendingSync = true;
+    state.lastLocalChangedAt = new Date().toISOString();
+  }
   const firstTraining = state.phases.find((phase) => phase.type === "training");
   const firstContrast = state.phases.find((phase) => phase.type === "contrast");
   if (firstTraining) {
@@ -2418,7 +2461,7 @@ document.querySelector("#auth-action").addEventListener("click", signOut);
 document.querySelector("#sync-now").addEventListener("click", pullRemoteState);
 
 renderScreen();
-saveState();
+saveState({ markDirty: false });
 initSupabaseAuth();
 
 if ("serviceWorker" in navigator) {
