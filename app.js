@@ -760,7 +760,7 @@ function createTrainingSessions(startDate = defaultSchedule.trainingStartDate, e
     const existing = existingSessions[index] || {};
 
     return {
-      id: `training-${index + 1}`,
+      id: existing.id || `training-${startDate}-${index + 1}`,
       phase: "training",
       date: addDays(startDate, offset),
       training,
@@ -782,7 +782,7 @@ function createContrastSessions(startDate = defaultSchedule.contrastStartDate, e
     const existing = existingSessions[index] || {};
 
     return {
-      id: `contrast-${index + 1}`,
+      id: existing.id || `contrast-${startDate}-${index + 1}`,
       phase: "contrast",
       date: addDays(startDate, offset),
       training,
@@ -937,6 +937,10 @@ function getCurrentSession() {
   return activeSessions()[currentIndex];
 }
 
+function findPhaseForSession(appState, session) {
+  return appState.phases?.find((phase) => phase.sessions?.some((phaseSession) => phaseSession === session)) || null;
+}
+
 function getSelectedTrainingExercises(training, appState = state, phase = getSelectedPhase()) {
   return (phase.selection || appState.selection)[training]
     .map((code) => getExerciseTemplate(code, appState))
@@ -955,17 +959,18 @@ function getSelectedContrastExercises(training, appState = state, phase = getSel
     .filter((exercise) => exercise.name);
 }
 
-function getSelectedExercises(session = getCurrentSession()) {
+function getSelectedExercises(session = getCurrentSession(), phase = null) {
   if (!session) return [];
+  const owningPhase = phase || findPhaseForSession(state, session) || getSelectedPhase();
   if (session.phase === "contrast") {
-    return getSelectedContrastExercises(session.training, state, getSelectedPhase());
+    return getSelectedContrastExercises(session.training, state, owningPhase);
   }
 
-  return getSelectedTrainingExercises(session.training, state, getSelectedPhase());
+  return getSelectedTrainingExercises(session.training, state, owningPhase);
 }
 
 function ensureSessionExercises(appState, session, phase = null) {
-  const owningPhase = phase || appState.phases?.find((item) => item.sessions?.some((phaseSession) => phaseSession === session)) || getSelectedPhase();
+  const owningPhase = phase || findPhaseForSession(appState, session) || getSelectedPhase();
   const selected =
     session.phase === "contrast"
       ? getSelectedContrastExercises(session.training, appState, owningPhase)
@@ -1440,9 +1445,10 @@ function contrastBestBefore(name, mode, beforeDate) {
 
 function renderExercises() {
   const session = getCurrentSession();
+  const phase = getSelectedPhase();
   const form = document.querySelector("#workout-form");
   const priorPrs = session.phase === "training" ? calculatePrs(session.date) : {};
-  const selectedExercises = getSelectedExercises(session);
+  const selectedExercises = getSelectedExercises(session, phase);
 
   if (!selectedExercises.length) {
     form.innerHTML = `
@@ -1613,7 +1619,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
 function syncFromInputs() {
   const session = getCurrentSession();
   if (!session) return;
-  ensureSessionExercises(state, session);
+  ensureSessionExercises(state, session, getSelectedPhase());
 
   document.querySelectorAll("[data-bar]").forEach((input) => {
     const code = input.dataset.bar;
@@ -1720,9 +1726,10 @@ function updateSummary() {
   const session = getCurrentSession();
   const summary = document.querySelector("#summary-grid");
   if (!summary || !session) return;
-  ensureSessionExercises(state, session);
+  const phase = getSelectedPhase();
+  ensureSessionExercises(state, session, phase);
   const currentPrs = calculatePrs();
-  const selectedExercises = getSelectedExercises(session);
+  const selectedExercises = getSelectedExercises(session, phase);
 
   if (!selectedExercises.length) {
     summary.innerHTML = "";

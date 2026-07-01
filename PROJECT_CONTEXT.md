@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v81`
+Aktuelle App-/Cache-Version: `v82`
 
 ## Aenderungsprotokoll
+
+- 01.07.2026: Speichern von Satzwerten weiter gehaertet. Uebungslisten werden beim Rendern/Speichern nun konsequent ueber die konkrete Session/Phase aufgeloest; neue Phasen bekommen kuenftig eindeutige Session-IDs mit Startdatum. Bestehende Session-IDs bleiben unveraendert. Cache-/App-Version auf `v82` erhoeht.
 
 - 01.07.2026: Speichern von Satzwerten in neuen Phasen stabilisiert. Ursache waren wiederverwendete Session-IDs wie `training-1` ueber mehrere Phasen hinweg; die Uebungsinitialisierung ordnet Sessions nun ueber die konkrete Phase bzw. Session-Objekt-Referenz zu. Cache-/App-Version auf `v81` erhoeht.
 
@@ -258,7 +260,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v81`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v82`.
 
 Kalender:
 
