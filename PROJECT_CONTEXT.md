@@ -6,6 +6,8 @@ Aktuelle App-/Cache-Version: `v87`
 
 ## Aenderungsprotokoll
 
+- 01.07.2026: GitHub-Pages-Deploy fuer `v87` erneut angestossen, weil GitHub Pages nach dem Push noch den vorherigen Commit `0fa0d7a`/Version `v86` auslieferte, obwohl `main` bereits auf `v87` stand.
+
 - 01.07.2026: Service-Worker-Cache eingegrenzt. Der Fetch-Handler cached nur noch bekannte eigene App-Assets und keine Supabase/API- oder sonstigen Fremdrequests; fehlerhafte Responses werden nicht in den Cache geschrieben. Cache-/App-Version auf `v87` erhoeht.
 
 - 01.07.2026: Globale Kontrastuebungs-Aenderungen schuetzen erledigte Trainings. Umbenennen/Typ/Stange aktualisiert weiterhin Bibliothek, Auswahl und geplante Einheiten, aber Sessions mit Status `done` behalten ihre gespeicherten Werte. Cache-/App-Version auf `v86` erhoeht.
