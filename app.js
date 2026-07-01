@@ -964,12 +964,12 @@ function getSelectedExercises(session = getCurrentSession()) {
   return getSelectedTrainingExercises(session.training, state, getSelectedPhase());
 }
 
-function ensureSessionExercises(appState, session) {
-  const phase = appState.phases?.find((item) => item.sessions?.some((phaseSession) => phaseSession.id === session.id)) || getSelectedPhase();
+function ensureSessionExercises(appState, session, phase = null) {
+  const owningPhase = phase || appState.phases?.find((item) => item.sessions?.some((phaseSession) => phaseSession === session)) || getSelectedPhase();
   const selected =
     session.phase === "contrast"
-      ? getSelectedContrastExercises(session.training, appState, phase)
-      : getSelectedTrainingExercises(session.training, appState, phase);
+      ? getSelectedContrastExercises(session.training, appState, owningPhase)
+      : getSelectedTrainingExercises(session.training, appState, owningPhase);
   const nextExercises = { ...session.exercises };
 
   selected.forEach((meta) => {
@@ -991,7 +991,7 @@ function ensureSessionExercises(appState, session) {
 
 function ensureAllSessionExercises(appState) {
   if (appState.phases) {
-    appState.phases.forEach((phase) => phase.sessions.forEach((session) => ensureSessionExercises(appState, session)));
+    appState.phases.forEach((phase) => phase.sessions.forEach((session) => ensureSessionExercises(appState, session, phase)));
     return;
   }
   appState.trainingSessions.forEach((session) => ensureSessionExercises(appState, session));
