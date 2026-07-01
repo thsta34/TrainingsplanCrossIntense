@@ -2147,15 +2147,17 @@ function updateGlobalContrastExercise(input) {
         });
       });
 
-      phase.sessions.forEach((session) => {
-        Object.values(session.exercises || {}).forEach((entry) => {
-          if (contrastExerciseKey(entry.name || "") !== key) return;
-          entry.name = nextName;
-          entry.mode = nextMode;
-          entry.bar = nextMode === "barbell" ? nextBar || 20 : 0;
-          entry.sets = (entry.sets || createEmptySets(nextMode)).map((value) => normalizeSetValue(nextMode, value));
+      phase.sessions
+        .filter((session) => session.status !== "done")
+        .forEach((session) => {
+          Object.values(session.exercises || {}).forEach((entry) => {
+            if (contrastExerciseKey(entry.name || "") !== key) return;
+            entry.name = nextName;
+            entry.mode = nextMode;
+            entry.bar = nextMode === "barbell" ? nextBar || 20 : 0;
+            entry.sets = (entry.sets || createEmptySets(nextMode)).map((value) => normalizeSetValue(nextMode, value));
+          });
         });
-      });
     });
 
   ensureAllSessionExercises(state);

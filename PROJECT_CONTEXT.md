@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v85`
+Aktuelle App-/Cache-Version: `v86`
 
 ## Aenderungsprotokoll
+
+- 01.07.2026: Globale Kontrastuebungs-Aenderungen schuetzen erledigte Trainings. Umbenennen/Typ/Stange aktualisiert weiterhin Bibliothek, Auswahl und geplante Einheiten, aber Sessions mit Status `done` behalten ihre gespeicherten Werte. Cache-/App-Version auf `v86` erhoeht.
 
 - 01.07.2026: Rendering von frei eingegebenen Namen/Notizen gehaertet. Userdaten aus Kontrastuebungen, Datalist-Optionen, Trainingsformularen und Statistik werden vor `innerHTML`-Ausgabe escaped, damit Sonderzeichen/HTML die UI nicht beschaedigen. Cache-/App-Version auf `v85` erhoeht.
 
@@ -266,7 +268,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v85`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v86`.
 
 Kalender:
 
