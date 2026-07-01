@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v86`
+Aktuelle App-/Cache-Version: `v87`
 
 ## Aenderungsprotokoll
+
+- 01.07.2026: Service-Worker-Cache eingegrenzt. Der Fetch-Handler cached nur noch bekannte eigene App-Assets und keine Supabase/API- oder sonstigen Fremdrequests; fehlerhafte Responses werden nicht in den Cache geschrieben. Cache-/App-Version auf `v87` erhoeht.
 
 - 01.07.2026: Globale Kontrastuebungs-Aenderungen schuetzen erledigte Trainings. Umbenennen/Typ/Stange aktualisiert weiterhin Bibliothek, Auswahl und geplante Einheiten, aber Sessions mit Status `done` behalten ihre gespeicherten Werte. Cache-/App-Version auf `v86` erhoeht.
 
@@ -268,7 +270,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v86`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v87`.
 
 Kalender:
 
