@@ -2196,8 +2196,16 @@ function updateContrastSelection(input) {
 function updatePhaseStart(input) {
   syncFromInputs();
   const phase = getSelectedPhase();
-  phase.startDate = input.value;
-  phase.id = `phase-${phase.type}-${phase.startDate}`;
+  const nextStartDate = input.value;
+  const nextPhaseId = `phase-${phase.type}-${nextStartDate}`;
+  const duplicatePhase = state.phases.find((item) => item !== phase && item.id === nextPhaseId);
+  if (duplicatePhase) {
+    window.alert("Es gibt bereits eine Phase mit diesem Typ und Startdatum.");
+    input.value = phase.startDate;
+    return;
+  }
+  phase.startDate = nextStartDate;
+  phase.id = nextPhaseId;
   phase.sessions =
     phase.type === "training"
       ? createTrainingSessions(phase.startDate, phase.sessions)
