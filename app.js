@@ -39,6 +39,7 @@ const exerciseCatalog = [
 const defaultExerciseModes = Object.fromEntries(exerciseCatalog.map((exercise) => [exercise.code, exercise.mode]));
 
 const storageKey = "training-cycle-state-v3";
+const remoteImportBackupKey = "training-cycle-state-v3-before-remote-import";
 const legacyKey = "training-block-10-state-v2";
 const registrationEnabledKey = "training-registration-enabled";
 const registrationSettingKey = "registration_enabled";
@@ -49,6 +50,7 @@ const supabaseClient = window.supabase?.createClient(supabaseUrl, supabaseKey);
 const formatter = new Intl.NumberFormat("de-CH", { maximumFractionDigits: 2 });
 let syncUser = null;
 let syncTimer = null;
+let remoteSaveChain = Promise.resolve();
 let isApplyingRemoteState = false;
 let isInitialAuthLoading = true;
 let currentView = "training";
@@ -498,14 +500,16 @@ function hasPendingLocalChanges() {
 }
 
 function shouldProtectLocalState(remoteState, updatedAt) {
-  if (!remoteState || !hasPendingLocalChanges()) return false;
-  if (!updatedAt || !state.lastRemoteSyncedAt) return true;
-  return new Date(updatedAt).getTime() >= new Date(state.lastRemoteSyncedAt).getTime();
+  return Boolean(remoteState && hasPendingLocalChanges());
 }
 
 function applyRemoteState(remoteState) {
   if (!remoteState) return;
   isApplyingRemoteState = true;
+  localStorage.setItem(remoteImportBackupKey, JSON.stringify({
+    savedAt: new Date().toISOString(),
+    state: serializeState(),
+  }));
   state = normalizeAppState(remoteState);
   state.pendingSync = false;
   state.lastRemoteSyncedAt = remoteUpdatedAt || new Date().toISOString();
@@ -590,11 +594,12 @@ async function writeRemoteStateData(nextState, updatedAt = new Date().toISOStrin
   }
 }
 
-async function saveRemoteState() {
+async function persistRemoteState() {
   if (!supabaseClient || !syncUser || isApplyingRemoteState || isInitialAuthLoading) return;
   setSyncStatus("Speichere...");
   const updatedAt = new Date().toISOString();
   const nextState = serializeState();
+  const savedLocalChangedAt = nextState.lastLocalChangedAt || null;
   nextState.pendingSync = false;
   nextState.lastRemoteSyncedAt = updatedAt;
   try {
@@ -606,12 +611,26 @@ async function saveRemoteState() {
     return;
   }
 
+  remoteUpdatedAt = updatedAt;
+  if ((state.lastLocalChangedAt || null) !== savedLocalChangedAt) {
+    setSyncStatus("Neuere Änderung vorgemerkt");
+    return;
+  }
+
   state.pendingSync = false;
   state.lastRemoteSyncedAt = updatedAt;
-  remoteUpdatedAt = updatedAt;
   localStorage.setItem(storageKey, JSON.stringify(state));
   setLastSyncError(null);
   setSyncStatus("Synchronisiert");
+}
+
+function saveRemoteState() {
+  if (!supabaseClient || !syncUser || isApplyingRemoteState || isInitialAuthLoading) {
+    return Promise.resolve();
+  }
+
+  remoteSaveChain = remoteSaveChain.then(persistRemoteState, persistRemoteState);
+  return remoteSaveChain;
 }
 
 async function overwriteRemoteState(nextState) {
@@ -2397,7 +2416,7 @@ async function resetAppState() {
 function setView(view) {
   if (currentView === "training" && view !== "training") {
     safeSyncFromInputs();
-    saveState();
+    saveState({ markDirty: false });
   }
 
   if (view === "training") {
@@ -2410,6 +2429,7 @@ function setView(view) {
   currentView = view;
   document.querySelector("#training-view").hidden = view !== "training";
   document.querySelector("#stats-view").hidden = view !== "stats";
+  document.querySelector("#handbook-view").hidden = view !== "handbook";
   document.querySelector("#settings-view").hidden = view !== "settings";
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === view);
@@ -2425,7 +2445,7 @@ document.addEventListener("click", (event) => {
 
 document.querySelector("#phase-select").addEventListener("change", (event) => {
   safeSyncFromInputs();
-  saveState();
+  saveState({ markDirty: false });
   const targetPhase = state.phases.find((phase) => phase.id === event.target.value);
   if (!targetPhase) return;
   selectedPhaseId = targetPhase.id;
@@ -2490,7 +2510,7 @@ document.querySelector("#phase-list").addEventListener("click", (event) => {
   const button = event.target.closest("[data-phase-id]");
   if (!button) return;
   safeSyncFromInputs();
-  saveState();
+  saveState({ markDirty: false });
   selectedPhaseId = button.dataset.phaseId;
   currentPhase = getSelectedPhase().type;
   currentIndex = 0;
@@ -2527,7 +2547,7 @@ document.querySelector("#calendar-grid").addEventListener("click", (event) => {
   const button = event.target.closest("[data-session-index]");
   if (!button) return;
   safeSyncFromInputs();
-  saveState();
+  saveState({ markDirty: false });
   currentIndex = Number(button.dataset.sessionIndex);
   renderScreen();
 });
@@ -2545,14 +2565,14 @@ document.querySelector("#stats-view").addEventListener("click", (event) => {
 
 document.querySelector("#prev-session").addEventListener("click", () => {
   safeSyncFromInputs();
-  saveState();
+  saveState({ markDirty: false });
   currentIndex = Math.max(0, currentIndex - 1);
   renderScreen();
 });
 
 document.querySelector("#next-session").addEventListener("click", () => {
   safeSyncFromInputs();
-  saveState();
+  saveState({ markDirty: false });
   currentIndex = Math.min(activeSessions().length - 1, currentIndex + 1);
   renderScreen();
 });

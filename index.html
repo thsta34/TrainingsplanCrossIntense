@@ -28,6 +28,7 @@
       <nav class="app-tabs" aria-label="App Bereich">
         <button class="app-tab active" type="button" data-view="training">Training</button>
         <button class="app-tab" type="button" data-view="stats">Statistik</button>
+        <button class="app-tab" type="button" data-view="handbook">Handbuch</button>
         <button class="app-tab" type="button" data-view="settings">Settings</button>
       </nav>
 
@@ -112,6 +113,88 @@
         </section>
       </section>
 
+      <section id="handbook-view" class="app-view" hidden>
+        <article class="handbook-card">
+          <header class="handbook-intro">
+            <span class="handbook-kicker">Hilfe zur App</span>
+            <h2>So funktioniert dein Trainingsplan</h2>
+            <p>Hier findest du die wichtigsten Schritte vom Einloggen bis zur Auswertung deiner Trainings.</p>
+          </header>
+
+          <section class="handbook-quickstart" aria-labelledby="quickstart-title">
+            <h3 id="quickstart-title">Schnellstart</h3>
+            <ol>
+              <li><strong>Einloggen:</strong> Öffne <button class="handbook-link" type="button" data-view="settings">Settings</button> und melde dich mit E-Mail und Passwort an.</li>
+              <li><strong>Training wählen:</strong> Öffne <button class="handbook-link" type="button" data-view="training">Training</button>. Die App zeigt dir automatisch die passende Einheit.</li>
+              <li><strong>Werte erfassen:</strong> Trage deine Werte direkt bei den Übungen und Sätzen ein.</li>
+              <li><strong>Abschliessen:</strong> Tippe nach dem Training auf <strong>Training erledigt</strong>.</li>
+              <li><strong>Fortschritt ansehen:</strong> Deine Bestleistungen findest du unter <button class="handbook-link" type="button" data-view="stats">Statistik</button>.</li>
+            </ol>
+          </section>
+
+          <div class="handbook-sections">
+            <details open>
+              <summary>Training auswählen und navigieren</summary>
+              <div class="handbook-detail">
+                <p>Im Bereich <strong>Training</strong> zeigt die Phasenauswahl den aktuellen Trainings- oder Kontrastblock. Mit den Pfeilen wechselst du zur vorherigen oder nächsten Einheit.</p>
+                <p>Der Kalender zeigt zuerst die aktuelle Woche. Mit <strong>+</strong> öffnest du den ganzen Block; ein Tipp auf einen Kalendertag öffnet dieses Training.</p>
+                <div class="handbook-tip"><strong>Tipp:</strong> Ein Klick auf das Logo führt jederzeit zurück zum Training.</div>
+              </div>
+            </details>
+
+            <details>
+              <summary>Trainingswerte richtig eintragen</summary>
+              <div class="handbook-detail">
+                <p>Fülle die angezeigten Sätze von oben nach unten aus. Die App speichert Änderungen automatisch.</p>
+                <ul>
+                  <li><strong>Stange:</strong> Stangengewicht und Zusatzgewicht eintragen.</li>
+                  <li><strong>Hantel oder Maschine:</strong> Das verwendete Gewicht pro Satz eintragen.</li>
+                  <li><strong>Kettlebell:</strong> Gewicht einer Kettlebell und die Anzahl der Kettlebells auswählen.</li>
+                  <li><strong>Bänder:</strong> Grün, Rot, Schwarz oder Körper auswählen. Zusatzgewicht kann zusammen mit Körpergewicht erfasst werden.</li>
+                </ul>
+                <p>Gewichte dürfen nicht negativ sein und können mit bis zu zwei Nachkommastellen eingegeben werden.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Training oder einzelne Übung skippen</summary>
+              <div class="handbook-detail">
+                <p>Fällt die ganze Einheit aus, wähle <strong>Training skippen</strong>. Mit einem erneuten Tipp hebst du den Skip wieder auf.</p>
+                <p>Wenn du nur eine Übung auslässt, kannst du diese direkt bei der Übung skippen. Die übrige Einheit lässt sich trotzdem als erledigt markieren. Geskippte Übungen zählen nicht für Bestleistungen oder Statistik.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>PR, PB und Statistik verstehen</summary>
+              <div class="handbook-detail">
+                <p><strong>PB</strong> bezeichnet deine bisher beste Leistung. <strong>PR-Tag</strong> markiert eine Einheit, in der ein neuer persönlicher Rekord vorgesehen ist.</p>
+                <p>Unter <strong>Statistik</strong> wechselst du zwischen Training und Kontrast. Angezeigt werden nur gültige Werte aus erledigten, nicht geskippten Übungen.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Synchronisation auf mehreren Geräten</summary>
+              <div class="handbook-detail">
+                <p>Nach dem Einloggen werden Änderungen automatisch gespeichert und synchronisiert. Möchtest du auf einem zweiten Gerät den neuesten Stand laden, öffne dort <strong>Settings</strong> und tippe auf <strong>Jetzt syncen</strong>.</p>
+                <div class="handbook-tip"><strong>Wichtig:</strong> Warte nach einer Eingabe kurz auf den Status <strong>Synchronisiert</strong>, bevor du die App schliesst oder das Gerät wechselst.</div>
+              </div>
+            </details>
+
+            <details>
+              <summary>Wenn etwas nicht wie erwartet aussieht</summary>
+              <div class="handbook-detail">
+                <ul>
+                  <li><strong>Kein Training sichtbar:</strong> Prüfe, ob du eingeloggt bist und die richtige Phase ausgewählt ist.</li>
+                  <li><strong>Daten fehlen auf einem anderen Gerät:</strong> Tippe dort unter Settings auf <strong>Jetzt syncen</strong>.</li>
+                  <li><strong>Eine Übung fehlt in der Statistik:</strong> Prüfe, ob das Training erledigt, die Übung nicht geskippt und ein gültiger Wert eingetragen ist.</li>
+                  <li><strong>Nach einem Update wirkt die App unverändert:</strong> Lade die Seite neu. Auf dem Handy kann es helfen, die App vollständig zu schliessen und erneut zu öffnen.</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </article>
+      </section>
+
       <section id="settings-view" class="app-view" hidden>
         <section class="sync-card" aria-label="Supabase Sync">
           <div class="section-head">
@@ -187,7 +270,7 @@
           <button id="reset-app-state" class="danger-button" type="button">App zurücksetzen - ALLE Daten werden gelöscht</button>
         </section>
 
-        <p class="app-version">Version <span id="app-version">v89</span></p>
+        <p class="app-version">Version <span id="app-version">v90</span></p>
       </section>
     </main>
 

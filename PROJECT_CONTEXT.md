@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v89`
+Aktuelle App-/Cache-Version: `v90`
 
 ## Aenderungsprotokoll
+
+- 28.09.2026: Benutzerfreundliches In-App-Handbuch ohne Adminfunktionen ergaenzt. Der neue Reiter `Handbuch` steht zwischen Statistik und Settings und bietet Schnellstart, aufklappbare Anleitungen zu Trainingseingabe, Skippen, PR/PB, Statistik, geraeteuebergreifendem Sync und typischen Problemen. Zusaetzlich werden lokale, noch nicht synchronisierte Aenderungen niemals automatisch durch Remote-Daten ersetzt; Remote-Saves eines Geraets laufen nacheinander und vor Remote-Imports wird lokal eine Sicherheitskopie angelegt. Cache-/App-Version auf `v90` erhoeht.
 
 - 28.09.2026: Initialen Supabase/Auth-Sync gegen Remote-Overwrites gehaertet. Nicht als Aenderung markierte lokale Speicherungen loesen keinen Remote-Save mehr aus; waehrend des initialen Auth-/Remote-Loads sind Remote-Saves gesperrt. Eine noch fehlende `training_app_settings`-Tabelle bzw. ein veralteter Supabase-Schema-Cache wird als lokaler Registrierungs-Fallback behandelt. Cache-/App-Version auf `v89` erhoeht.
 
@@ -308,7 +310,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v89`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v90`.
 
 Kalender:
 

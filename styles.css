@@ -53,7 +53,7 @@ body {
 
 .app-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-top: 12px;
   padding: 8px;
@@ -74,6 +74,120 @@ body {
   border-color: #111827;
   background: #111827;
   color: #fff;
+}
+
+.handbook-card {
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.handbook-intro {
+  padding: 24px;
+  background: #111827;
+  color: #fff;
+}
+
+.handbook-kicker {
+  color: #99f6e4;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.handbook-intro h2 {
+  margin: 7px 0 8px;
+  font-size: clamp(1.45rem, 5vw, 2rem);
+}
+
+.handbook-intro p,
+.handbook-detail p {
+  line-height: 1.55;
+}
+
+.handbook-intro p {
+  max-width: 580px;
+  margin: 0;
+  color: #d1d5db;
+}
+
+.handbook-quickstart {
+  margin: 16px;
+  padding: 18px;
+  border: 1px solid #99e1d7;
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+.handbook-quickstart h3 {
+  margin: 0 0 12px;
+}
+
+.handbook-quickstart ol {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+  line-height: 1.45;
+}
+
+.handbook-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.handbook-sections {
+  display: grid;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+.handbook-sections details {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.handbook-sections summary {
+  padding: 15px 44px 15px 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.handbook-sections details[open] summary {
+  border-bottom: 1px solid var(--line);
+  background: #f8fafc;
+}
+
+.handbook-detail {
+  padding: 4px 16px 16px;
+}
+
+.handbook-detail ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 20px;
+  line-height: 1.45;
+}
+
+.handbook-tip {
+  margin-top: 12px;
+  padding: 12px;
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  background: #f0fdfa;
+  line-height: 1.45;
 }
 
 .app-view[hidden] {
@@ -979,6 +1093,30 @@ textarea {
 }
 
 @media (max-width: 430px) {
+  .app-tabs {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  .app-tab {
+    min-height: 40px;
+    padding: 5px 3px;
+    font-size: 0.76rem;
+  }
+
+  .handbook-intro {
+    padding: 20px 16px;
+  }
+
+  .handbook-quickstart {
+    margin: 12px;
+    padding: 15px;
+  }
+
+  .handbook-sections {
+    padding: 0 12px 12px;
+  }
+
   .topbar {
     align-items: flex-start;
     display: grid;

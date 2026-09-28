@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
 Stand: 28.09.2026
-App-Version: v89
+App-Version: v90
 
 ## 1. Zweck der App
 
@@ -27,9 +27,27 @@ Die wichtigsten Bereiche sind:
 
 - Training: aktuelles Training erfassen
 - Statistik: Bestleistungen ansehen
+- Handbuch: Bedienung direkt in der App nachlesen
 - Settings: Login, Sync, Phasen und Uebungen verwalten
 
-## 3. Login und Synchronisation
+## 3. In-App-Handbuch
+
+Zwischen `Statistik` und `Settings` gibt es den Bereich `Handbuch`. Er richtet
+sich an Nutzerinnen und Nutzer der App und enthaelt keine Adminfunktionen.
+
+Oben steht ein kurzer Schnellstart. Darunter lassen sich einzelne Kapitel nach
+Bedarf aufklappen:
+
+- Training auswaehlen und navigieren
+- Trainingswerte richtig eintragen
+- Training oder einzelne Uebung skippen
+- PR, PB und Statistik verstehen
+- Synchronisation auf mehreren Geraeten
+- Hilfe bei typischen Problemen
+
+Links im Schnellstart fuehren direkt zum passenden App-Bereich.
+
+## 4. Login und Synchronisation
 
 Die App soll nur nach dem Login benutzt werden. Dadurch wird verhindert, dass
 Trainingsdaten nur lokal auf einem einzelnen Geraet gespeichert werden.
@@ -82,7 +100,7 @@ wird.
 Du musst dafuer in der App nichts manuell machen. Wenn du den Heartbeat pruefen
 moechtest, findest du ihn in GitHub unter `Actions` als `Supabase heartbeat`.
 
-## 4. Bereich Training
+## 5. Bereich Training
 
 Der Bereich `Training` ist der Hauptbereich der App.
 
@@ -129,7 +147,7 @@ Die Kalenderkacheln zeigen:
 Beim 5. Training eines Uebungspaars erscheint ein roter PR-Hinweis in der
 Kalenderkachel.
 
-## 5. Training erfassen
+## 6. Training erfassen
 
 In einem normalen Training werden zwei Uebungen angezeigt.
 
@@ -184,7 +202,7 @@ Kettlebell ein und wählst daneben `1 Kettlebell` oder `2 Kettlebells`.
 Bei zwei Kettlebells berechnet die App die Gesamtlast automatisch, z.B.
 `16 kg × 2 = 32 kg`. Diese Gesamtlast wird auch für PB/PR verwendet.
 
-## 6. Trainingsstatus
+## 7. Trainingsstatus
 
 Unter den Kopf-Informationen gibt es die Buttons:
 
@@ -223,7 +241,7 @@ Eine geskippt markierte Uebung:
 - zaehlt nicht fuer PR, PB oder Statistik
 - wird in der Kalenderkachel durchgestrichen
 
-## 7. Personal Records und Bestleistungen
+## 8. Personal Records und Bestleistungen
 
 Die App unterscheidet Trainingsbestleistungen und Kontrastbestleistungen.
 
@@ -246,7 +264,7 @@ Die App markiert den besten Satz nach dem Verlassen des Eingabefeldes neu.
 Wenn eine Kontrastuebung schon frueher gemacht wurde, zeigt die App beim
 Ausfuellen die bisherige Bestleistung unterhalb der Uebung an.
 
-## 8. Bereich Statistik
+## 9. Bereich Statistik
 
 Im Bereich `Statistik` kannst du zwischen zwei Ansichten umschalten:
 
@@ -273,7 +291,7 @@ Die Kontraststatistik zeigt pro Kontrastuebung die beste erfasste Leistung.
 Dabei kann die beste Leistung je nach Uebung und Eingabe aus verschiedenen
 Saetzen stammen.
 
-## 9. Bereich Settings
+## 10. Bereich Settings
 
 In `Settings` werden Login, Sync, Phasen und Uebungen verwaltet.
 
@@ -310,7 +328,7 @@ Mit `Loeschen` kann eine Phase entfernt werden.
 
 Beim Loeschen einer Kontrastphase bleiben globale Kontrastuebungen erhalten.
 
-## 10. Uebungsverwaltung
+## 11. Uebungsverwaltung
 
 In den Settings gibt es den Bereich `Uebungsverwaltung`.
 
@@ -351,7 +369,7 @@ Du kannst:
 
 Neue Kontrastuebungen werden automatisch in die globale Liste uebernommen.
 
-## 11. App zuruecksetzen
+## 12. App zuruecksetzen
 
 In den Settings gibt es unten den Button:
 
@@ -374,7 +392,7 @@ Dadurch kommen alte Phasen nach einem manuellen Sync nicht wieder zurueck.
 
 Nutze diesen Button nur, wenn du wirklich neu starten willst.
 
-## 12. Nutzung auf dem Handy
+## 13. Nutzung auf dem Handy
 
 Die App kann auf dem Handy im Browser genutzt werden. Je nach Browser kann sie
 auch als App zum Startbildschirm hinzugefuegt werden.
@@ -390,7 +408,7 @@ In den Settings unten steht die aktuelle Version. Wenn PC und Handy
 unterschiedliche Versionen anzeigen, nutzt eines der Geraete noch alte
 Browser- oder Service-Worker-Daten.
 
-## 13. Typische Fragen
+## 14. Typische Fragen
 
 ### Warum sehe ich kein Training?
 
@@ -418,7 +436,7 @@ Moegliche Gruende:
 Dann laeuft auf einem Geraet wahrscheinlich noch ein alter Browser- oder
 Service-Worker-Cache. Lade die Seite neu oder loesche die Website-Daten.
 
-## 14. Administrator-Hinweis
+## 15. Administrator-Hinweis
 
 Die Registrierung kann in den Settings ein- und ausgeschaltet werden. Diese
 Option ist nur fuer den Admin-User sichtbar:
