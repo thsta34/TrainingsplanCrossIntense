@@ -478,13 +478,13 @@ git pull
 git status --short
 ```
 
-Aktiver lokaler Arbeitsordner:
+Aktiver lokaler Arbeitsordner in der aktuellen Windows-Umgebung:
 
 ```text
-C:\git_repository\TrainingsplanCrossIntense
+C:\github_repo\TrainingsplanCrossIntense
 ```
 
-Dieser Ordner muss auf `https://github.com/thsta34/TrainingsplanCrossIntense.git` zeigen. Der alte lokale `staehth`-Clone ist nur noch Archiv und soll nicht mehr fuer neue Arbeit verwendet werden.
+Der jeweils verwendete Clone muss auf `https://github.com/thsta34/TrainingsplanCrossIntense.git` zeigen. Der alte lokale `staehth`-Clone ist nur noch Archiv und soll nicht mehr fuer neue Arbeit verwendet werden. Auf einem anderen PC darf der lokale Basispfad abweichen; massgeblich sind Repository und Branch `main`.
 
 Dann Code lesen, besonders:
 
