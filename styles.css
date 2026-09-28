@@ -1215,7 +1215,14 @@ textarea {
   }
 
   .band-extra {
-    grid-column: auto;
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .band-controls > .reps-input {
+    grid-column: 2;
+    grid-row: 3;
+    width: 100%;
   }
 
   .calendar-grid {

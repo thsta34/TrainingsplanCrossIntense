@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v92`
+Aktuelle App-/Cache-Version: `v93`
 
 ## Aenderungsprotokoll
+
+- 28.09.2026: Mobile Rasterposition bei Banduebungen explizit festgelegt. `Zusatz` steht in Spalte 1 und `Wdh.` in Spalte 2 derselben Zeile; das Wiederholungsfeld nutzt mobil die volle Spaltenbreite. Cache-/App-Version auf `v93` erhoeht.
 
 - 28.09.2026: Mobile Darstellung der Wiederholungen bei Banduebungen optimiert. `Zusatz` und `Wdh.` stehen in der letzten Zeile nun nebeneinander statt untereinander. Cache-/App-Version auf `v92` erhoeht.
 
@@ -323,7 +325,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v92`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v93`.
 
 Kalender:
 
