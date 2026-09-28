@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
 Stand: 28.09.2026
-App-Version: v90
+App-Version: v91
 
 ## 1. Zweck der App
 
@@ -155,10 +155,17 @@ Pro Uebung kannst du eintragen:
 
 - Stangengewicht, falls die Uebung mit Stange ausgefuehrt wird
 - Werte pro Satz
+- Anzahl Wiederholungen pro Satz
 - bei Banduebungen die verwendeten Baender, Koerpergewicht und Zusatzgewicht
 - bei Kettlebell-Uebungen das Gewicht pro Kettlebell und ob eine oder zwei verwendet wurden
 
 Die App berechnet automatisch die Gesamtwerte und Bestleistungen.
+
+Die Wiederholungszahl wird zusammen mit dem jeweiligen Satz gespeichert und in
+der Statistik beim gewerteten Satz angezeigt. Haben zwei Saetze die gleiche
+Leistung, wird der Satz mit mehr Wiederholungen als besser bewertet.
+Pro Satz sind ganze Wiederholungszahlen von 1 bis 20 erlaubt; das Feld darf leer
+bleiben.
 
 ### Gewichtseingaben
 

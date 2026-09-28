@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v90`
+Aktuelle App-/Cache-Version: `v91`
 
 ## Aenderungsprotokoll
+
+- 28.09.2026: Wiederholungen pro Satz ergaenzt. Jeder Satz kann nun zusaetzlich zu Gewicht, Band- oder Kettlebell-Angaben eine ganzzahlige Wiederholungszahl von 1 bis 20 speichern. Training- und Kontraststatistik zeigen die Wiederholungen des gewerteten Satzes; bei gleicher Leistung entscheidet die hoehere Wiederholungszahl. Bestehende Trainings bleiben kompatibel. Cache-/App-Version auf `v91` erhoeht.
 
 - 28.09.2026: Benutzerfreundliches In-App-Handbuch ohne Adminfunktionen ergaenzt. Der neue Reiter `Handbuch` steht zwischen Statistik und Settings und bietet Schnellstart, aufklappbare Anleitungen zu Trainingseingabe, Skippen, PR/PB, Statistik, geraeteuebergreifendem Sync und typischen Problemen. Zusaetzlich werden lokale, noch nicht synchronisierte Aenderungen niemals automatisch durch Remote-Daten ersetzt; Remote-Saves eines Geraets laufen nacheinander und vor Remote-Imports wird lokal eine Sicherheitskopie angelegt. Cache-/App-Version auf `v90` erhoeht.
 
@@ -117,6 +119,10 @@ Besonderheit:
 
 Supabase-Setup fuer globale Registrierung:
 
+Das vollstaendige, wiederholt ausfuehrbare Setup liegt auch in
+`supabase-registration-settings.sql`. Es muss einmal im Supabase SQL Editor des
+Projekts `tnhwyrapdsqoklenzwjn` ausgefuehrt werden.
+
 ```sql
 create table if not exists public.training_app_settings (
   key text primary key,
@@ -125,6 +131,9 @@ create table if not exists public.training_app_settings (
 );
 
 alter table public.training_app_settings enable row level security;
+
+grant select on table public.training_app_settings to anon, authenticated;
+grant insert, update, delete on table public.training_app_settings to authenticated;
 
 drop policy if exists "Allow public read registration setting" on public.training_app_settings;
 create policy "Allow public read registration setting"
@@ -144,6 +153,8 @@ with check (auth.jwt() ->> 'email' = 'thstaehli@gmail.com');
 insert into public.training_app_settings (key, value)
 values ('registration_enabled', 'false'::jsonb)
 on conflict (key) do nothing;
+
+notify pgrst, 'reload schema';
 ```
 
 ## Trainingslogik
@@ -310,7 +321,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v90`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v91`.
 
 Kalender:
 

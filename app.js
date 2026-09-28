@@ -148,6 +148,18 @@ function clampNumberInput(input) {
   return nonNegativeNumber(input.value);
 }
 
+function normalizeReps(value) {
+  if (value === "" || value === null || value === undefined) return "";
+  return Math.max(1, Math.min(20, Math.trunc(Number(value) || 1)));
+}
+
+function clampRepsInput(input) {
+  const digits = input.value.replace(/\D/g, "").slice(0, 2);
+  const reps = normalizeReps(digits);
+  input.value = reps;
+  return reps;
+}
+
 const bandSupport = { green: 10, red: 4, black: 2 };
 const bandLabels = { green: "Grün", red: "Rot", black: "Schwarz" };
 
@@ -211,6 +223,14 @@ function comparePerformance(a, b) {
     return b.support - a.support;
   }
   return a.value - b.value;
+}
+
+function compareSetResults(a, b) {
+  if (!b) return 1;
+  if (!a) return -1;
+  const performanceComparison = comparePerformance(a.performance, b.performance);
+  if (performanceComparison !== 0) return performanceComparison;
+  return Number(a.reps || 0) - Number(b.reps || 0);
 }
 
 function formatBandValue(value) {
@@ -279,10 +299,11 @@ function bestExerciseSet(meta, entry) {
       return {
         performance: performanceForSet(meta, entry, normalized),
         setNumber: index + 1,
+        reps: normalizeReps(entry.reps?.[index]),
       };
     })
     .filter(Boolean)
-    .reduce((best, current) => (comparePerformance(current.performance, best?.performance) > 0 ? current : best), null);
+    .reduce((best, current) => (compareSetResults(current, best) > 0 ? current : best), null);
 }
 
 function exerciseSetPerformance(meta, entry, setIndex) {
@@ -293,6 +314,7 @@ function exerciseSetPerformance(meta, entry, setIndex) {
   return {
     performance: performanceForSet(meta, entry, normalized),
     setNumber: setIndex + 1,
+    reps: normalizeReps(entry.reps?.[setIndex]),
   };
 }
 
@@ -1142,11 +1164,16 @@ function ensureSessionExercises(appState, session, phase = null) {
       mode: meta.mode,
       bar: meta.defaultBar,
       sets: createEmptySets(meta.mode),
+      reps: Array(4).fill(""),
     };
     const snapshotMode = nextExercises[meta.code].mode || meta.mode;
     nextExercises[meta.code].mode = snapshotMode;
     nextExercises[meta.code].name = nextExercises[meta.code].name || meta.name;
     nextExercises[meta.code].sets = nextExercises[meta.code].sets.map((value) => normalizeSetValue(snapshotMode, value));
+    nextExercises[meta.code].reps = Array.from(
+      { length: nextExercises[meta.code].sets.length },
+      (_, index) => normalizeReps(nextExercises[meta.code].reps?.[index]),
+    );
   });
 
   session.exercises = nextExercises;
@@ -1593,11 +1620,12 @@ function contrastBestBefore(name, mode, beforeDate) {
         };
         const best = bestExerciseSet(meta, entry);
         if (!best) return;
-        if (!bestMatch || comparePerformance(best.performance, bestMatch.performance) > 0) {
+        if (!bestMatch || compareSetResults(best, bestMatch) > 0) {
           bestMatch = {
             performance: best.performance,
             date: session.date,
             setNumber: best.setNumber,
+            reps: best.reps,
           };
         }
       });
@@ -1665,7 +1693,7 @@ function renderExercises() {
             </div>
           </div>
           <div class="sets" aria-label="Sätze für ${meta.code}">
-            ${entry.sets.map((value, index) => renderSetRow(displayMeta, value, index, highlightedSet, isSkipped)).join("")}
+            ${entry.sets.map((value, index) => renderSetRow(displayMeta, value, index, highlightedSet, isSkipped, entry.reps?.[index])).join("")}
           </div>
         </section>
       `;
@@ -1691,12 +1719,21 @@ function highlightedSetIndex(session, meta, entry) {
   return best ? best.setNumber - 1 : 2;
 }
 
-function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false) {
+function renderRepsInput(meta, index, reps, disabled) {
+  return `
+    <label class="side-input reps-input" aria-label="${escapeHtml(meta.code)} Satz ${index + 1} Wiederholungen">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${escapeHtml(normalizeReps(reps))}" data-reps data-exercise="${escapeHtml(meta.code)}" data-set-index="${index}" ${disabled ? "disabled" : ""} />
+      <span>Wdh.</span>
+    </label>
+  `;
+}
+
+function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false, reps = "") {
   if (meta.mode === "bands") {
-    return renderBandSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet, disabled);
+    return renderBandSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet, disabled, reps);
   }
   if (meta.mode === "kettlebell") {
-    return renderKettlebellSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet, disabled);
+    return renderKettlebellSetRow(meta, normalizeSetValue(meta.mode, value), index, highlightedSet, disabled, reps);
   }
   const setNumber = index + 1;
   const isHeavySet = index === highlightedSet;
@@ -1718,12 +1755,13 @@ function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false) 
         />
         <span>${suffix}</span>
       </label>
+      ${renderRepsInput(meta, index, reps, disabled)}
       <div class="total" data-total="${escapeHtml(meta.code)}-${index}"></div>
     </div>
   `;
 }
 
-function renderKettlebellSetRow(meta, value, index, highlightedSet = 2, disabled = false) {
+function renderKettlebellSetRow(meta, value, index, highlightedSet = 2, disabled = false, reps = "") {
   const setNumber = index + 1;
   const isHeavySet = index === highlightedSet;
   return `
@@ -1742,12 +1780,13 @@ function renderKettlebellSetRow(meta, value, index, highlightedSet = 2, disabled
           </select>
         </label>
       </div>
+      ${renderRepsInput(meta, index, reps, disabled)}
       <div class="total" data-total="${escapeHtml(meta.code)}-${index}"></div>
     </div>
   `;
 }
 
-function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = false) {
+function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = false, reps = "") {
   const setNumber = index + 1;
   const isHeavySet = index === highlightedSet;
   const bands = value.bands || [];
@@ -1776,6 +1815,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
           <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.extraWeight)}" data-band-extra ${disabled ? "disabled" : ""} />
         </label>
       </div>
+      ${renderRepsInput(meta, index, reps, disabled)}
       <div class="total" data-total="${escapeHtml(meta.code)}-${index}"></div>
     </div>
   `;
@@ -1796,6 +1836,12 @@ function syncFromInputs() {
     const code = input.dataset.exercise;
     if (!session.exercises[code]) return;
     session.exercises[code].sets[Number(input.dataset.set)] = input.value === "" ? "" : clampNumberInput(input);
+  });
+
+  document.querySelectorAll("input[data-reps]").forEach((input) => {
+    const code = input.dataset.exercise;
+    if (!session.exercises[code]) return;
+    session.exercises[code].reps[Number(input.dataset.setIndex)] = clampRepsInput(input);
   });
 
   document.querySelectorAll(".band-controls").forEach((controls) => {
@@ -1961,7 +2007,7 @@ function collectTrainingStats() {
           const best = exerciseSetPerformance(meta, entry, 2);
           if (!best) return;
 
-          if (!stats[code] || comparePerformance(best.performance, stats[code].performance) > 0) {
+          if (!stats[code] || compareSetResults(best, stats[code]) > 0) {
             stats[code] = {
               code,
               name: meta.name,
@@ -1969,6 +2015,7 @@ function collectTrainingStats() {
               setNumber: best.setNumber,
               setLabel: "PB-Satz",
               performance: best.performance,
+              reps: best.reps,
             };
           }
         });
@@ -2002,7 +2049,7 @@ function collectContrastStats() {
           if (!best) return;
           const key = `${name.toLocaleLowerCase("de-CH")}::${mode}`;
 
-          if (!stats[key] || comparePerformance(best.performance, stats[key].performance) > 0) {
+          if (!stats[key] || compareSetResults(best, stats[key]) > 0) {
             stats[key] = {
               code: name,
               name: modeLabel(mode),
@@ -2010,6 +2057,7 @@ function collectContrastStats() {
               setNumber: best.setNumber,
               setLabel: "Schwerster Satz",
               performance: best.performance,
+              reps: best.reps,
             };
           }
         });
@@ -2055,7 +2103,7 @@ function renderStats() {
           <div>
             <span class="label">${escapeHtml(item.code)}</span>
             <div>${escapeHtml(item.name)}</div>
-            <div class="summary-meta">${item.setLabel}: Satz ${item.setNumber} · ${formatPrDate(item.date)}</div>
+            <div class="summary-meta">${item.setLabel}: Satz ${item.setNumber} · ${item.reps === "" ? "Wdh. –" : `${item.reps} Wdh.`} · ${formatPrDate(item.date)}</div>
           </div>
           <strong>${formatPerformance(item.performance)}</strong>
         </div>
