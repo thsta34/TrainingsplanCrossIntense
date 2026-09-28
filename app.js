@@ -1814,8 +1814,8 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
           <span>Zusatz</span>
           <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.extraWeight)}" data-band-extra ${disabled ? "disabled" : ""} />
         </label>
+        ${renderRepsInput(meta, index, reps, disabled)}
       </div>
-      ${renderRepsInput(meta, index, reps, disabled)}
       <div class="total" data-total="${escapeHtml(meta.code)}-${index}"></div>
     </div>
   `;

@@ -941,7 +941,7 @@ textarea {
 }
 
 .band-set-row {
-  grid-template-columns: 74px minmax(330px, 1fr) 82px 150px;
+  grid-template-columns: 74px minmax(410px, 1fr) 150px;
 }
 
 .kettlebell-set-row {
@@ -978,7 +978,7 @@ textarea {
 
 .band-controls {
   display: grid;
-  grid-template-columns: repeat(4, minmax(62px, 1fr)) 62px;
+  grid-template-columns: repeat(4, minmax(62px, 1fr)) 62px 82px;
   gap: 6px;
   align-items: end;
 }

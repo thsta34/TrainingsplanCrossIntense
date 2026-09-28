@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v91`
+Aktuelle App-/Cache-Version: `v92`
 
 ## Aenderungsprotokoll
+
+- 28.09.2026: Mobile Darstellung der Wiederholungen bei Banduebungen optimiert. `Zusatz` und `Wdh.` stehen in der letzten Zeile nun nebeneinander statt untereinander. Cache-/App-Version auf `v92` erhoeht.
 
 - 28.09.2026: Wiederholungen pro Satz ergaenzt. Jeder Satz kann nun zusaetzlich zu Gewicht, Band- oder Kettlebell-Angaben eine ganzzahlige Wiederholungszahl von 1 bis 20 speichern. Training- und Kontraststatistik zeigen die Wiederholungen des gewerteten Satzes; bei gleicher Leistung entscheidet die hoehere Wiederholungszahl. Bestehende Trainings bleiben kompatibel. Cache-/App-Version auf `v91` erhoeht.
 
@@ -321,7 +323,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v91`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v92`.
 
 Kalender:
 
