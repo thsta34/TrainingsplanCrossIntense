@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v88`
+Aktuelle App-/Cache-Version: `v89`
 
 ## Aenderungsprotokoll
+
+- 28.09.2026: Initialen Supabase/Auth-Sync gegen Remote-Overwrites gehaertet. Nicht als Aenderung markierte lokale Speicherungen loesen keinen Remote-Save mehr aus; waehrend des initialen Auth-/Remote-Loads sind Remote-Saves gesperrt. Eine noch fehlende `training_app_settings`-Tabelle bzw. ein veralteter Supabase-Schema-Cache wird als lokaler Registrierungs-Fallback behandelt. Cache-/App-Version auf `v89` erhoeht.
 
 - 28.09.2026: Registrierungsfreigabe von lokalem Browser-Storage auf eine oeffentlich lesbare Supabase-App-Einstellung umgestellt. Der Admin-Haken speichert `registration_enabled` in `training_app_settings`, damit neue/nicht eingeloggte User den Button `Registrieren` auf ihren eigenen Geraeten sehen. Cache-/App-Version auf `v88` erhoeht.
 
@@ -306,7 +308,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v88`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v89`.
 
 Kalender:
 

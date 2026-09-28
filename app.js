@@ -50,6 +50,7 @@ const formatter = new Intl.NumberFormat("de-CH", { maximumFractionDigits: 2 });
 let syncUser = null;
 let syncTimer = null;
 let isApplyingRemoteState = false;
+let isInitialAuthLoading = true;
 let currentView = "training";
 let statsMode = "training";
 let selectedPhaseId = null;
@@ -406,6 +407,15 @@ function setRegistrationEnabled(enabled) {
   localStorage.setItem(registrationEnabledKey, registrationEnabled ? "true" : "false");
 }
 
+function isMissingRegistrationSettingsError(error) {
+  const code = error?.code || "";
+  const message = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`.toLowerCase();
+  return code === "42P01"
+    || code === "PGRST204"
+    || code === "PGRST205"
+    || (message.includes("training_app_settings") && (message.includes("schema cache") || message.includes("does not exist")));
+}
+
 async function loadRegistrationSetting() {
   if (!supabaseClient) return;
 
@@ -424,6 +434,10 @@ async function loadRegistrationSetting() {
       renderAuth();
     }
   } catch (error) {
+    if (isMissingRegistrationSettingsError(error)) {
+      console.warn("Registration settings table is not available yet; using the local fallback", error);
+      return;
+    }
     console.warn("Registration setting could not be loaded", error);
   }
 }
@@ -450,6 +464,11 @@ async function saveRegistrationSetting(enabled) {
 
     setSyncStatus(enabled ? "Registrierung freigegeben" : "Registrierung gesperrt");
   } catch (error) {
+    if (isMissingRegistrationSettingsError(error)) {
+      setSyncStatus("Registrierung nur lokal geändert (Supabase-Tabelle fehlt)");
+      console.warn("Registration settings table is not available yet; saved locally only", error);
+      return;
+    }
     setSyncStatus("Registrierung nur lokal geändert");
     setLastSyncError(error);
     console.error(error);
@@ -572,7 +591,7 @@ async function writeRemoteStateData(nextState, updatedAt = new Date().toISOStrin
 }
 
 async function saveRemoteState() {
-  if (!supabaseClient || !syncUser || isApplyingRemoteState) return;
+  if (!supabaseClient || !syncUser || isApplyingRemoteState || isInitialAuthLoading) return;
   setSyncStatus("Speichere...");
   const updatedAt = new Date().toISOString();
   const nextState = serializeState();
@@ -596,7 +615,7 @@ async function saveRemoteState() {
 }
 
 async function overwriteRemoteState(nextState) {
-  if (!supabaseClient || !syncUser) return;
+  if (!supabaseClient || !syncUser || isInitialAuthLoading) return;
   setSyncStatus("Speichere...");
   const updatedAt = new Date().toISOString();
   const payloadState = JSON.parse(JSON.stringify(nextState));
@@ -616,7 +635,7 @@ async function overwriteRemoteState(nextState) {
 }
 
 function queueRemoteSave() {
-  if (!syncUser || isApplyingRemoteState) return;
+  if (!syncUser || isApplyingRemoteState || isInitialAuthLoading) return;
   setSyncStatus("Änderung vorgemerkt");
   window.clearTimeout(syncTimer);
   syncTimer = window.setTimeout(saveRemoteState, 600);
@@ -726,15 +745,22 @@ async function signOut() {
 
 async function initSupabaseAuth() {
   renderAuth();
-  if (!supabaseClient) return;
+  if (!supabaseClient) {
+    isInitialAuthLoading = false;
+    return;
+  }
 
-  await loadRegistrationSetting();
+  try {
+    await loadRegistrationSetting();
 
-  const { data } = await supabaseClient.auth.getSession();
-  syncUser = data.session?.user || null;
-  renderAuth();
-  if (syncUser) {
-    await syncAfterSignIn();
+    const { data } = await supabaseClient.auth.getSession();
+    syncUser = data.session?.user || null;
+    renderAuth();
+    if (syncUser) {
+      await syncAfterSignIn();
+    }
+  } finally {
+    isInitialAuthLoading = false;
   }
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
@@ -1033,7 +1059,9 @@ function saveState({ markDirty = true } = {}) {
     state.contrastSessions = firstContrast.sessions;
   }
   localStorage.setItem(storageKey, JSON.stringify(state));
-  queueRemoteSave();
+  if (markDirty) {
+    queueRemoteSave();
+  }
 }
 
 function getSelectedPhase() {

@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
-Stand: 29.06.2026
-App-Version: v88
+Stand: 28.09.2026
+App-Version: v89
 
 ## 1. Zweck der App
 
@@ -47,6 +47,10 @@ Nach erfolgreichem Login wechselt die App automatisch in den Bereich
 ### Synchronisation
 
 Trainingsdaten werden lokal gespeichert und mit Supabase synchronisiert.
+
+Beim Start laedt die App zuerst Login und vorhandene Remote-Daten. Der lokale
+Initialzustand wird dabei nicht automatisch nach Supabase geschrieben und kann
+einen bereits vorhandenen Remote-Stand nicht ueberschreiben.
 
 In den Settings gibt es den Button `Jetzt syncen`. Er ist nur sichtbar, wenn du
 eingeloggt bist.
@@ -426,3 +430,8 @@ Normale eingeloggte Nutzer sehen diese Option nicht.
 Wenn der Admin die Registrierung freigibt, wird diese Einstellung zentral in
 Supabase gespeichert. Neue Nutzer sehen danach auf ihren eigenen Geraeten den
 Button `Registrieren`, auch wenn sie noch nicht eingeloggt sind.
+
+Falls die Supabase-Tabelle `training_app_settings` noch nicht angelegt oder noch
+nicht im Schema-Cache verfuegbar ist, bleibt die App nutzbar. Die Einstellung
+wird dann vorlaeufig nur lokal gespeichert und die Settings zeigen einen
+entsprechenden Hinweis.
