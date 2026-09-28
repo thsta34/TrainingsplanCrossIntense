@@ -2,9 +2,11 @@
 
 Stand: 27.05.2026
 
-Aktuelle App-/Cache-Version: `v87`
+Aktuelle App-/Cache-Version: `v88`
 
 ## Aenderungsprotokoll
+
+- 28.09.2026: Registrierungsfreigabe von lokalem Browser-Storage auf eine oeffentlich lesbare Supabase-App-Einstellung umgestellt. Der Admin-Haken speichert `registration_enabled` in `training_app_settings`, damit neue/nicht eingeloggte User den Button `Registrieren` auf ihren eigenen Geraeten sehen. Cache-/App-Version auf `v88` erhoeht.
 
 - 01.07.2026: GitHub-Pages-Deploy fuer `v87` erneut angestossen, weil GitHub Pages nach dem Push noch den vorherigen Commit `0fa0d7a`/Version `v86` auslieferte, obwohl `main` bereits auf `v87` stand.
 
@@ -105,8 +107,40 @@ Besonderheit:
 
 - Registrierung kann in den Settings ein- und ausgeschaltet werden.
 - Diese Option ist nur sichtbar, wenn der eingeloggte User `thstaehli@gmail.com` ist.
-- Nicht eingeloggte User sehen die Registrierungsoption nicht.
+- Nicht eingeloggte User sehen die Registrierungsoption nicht, aber bei freigegebener Registrierung den Button `Registrieren`.
+- Die Freigabe wird in Supabase in `public.training_app_settings` unter Key `registration_enabled` gespeichert. Dadurch sehen neue User den Button auch auf eigenen Geraeten; alter Browser-`localStorage` allein reicht dafuer nicht.
 - Nach erfolgreichem Login soll die App automatisch auf den Reiter `Training` wechseln.
+
+Supabase-Setup fuer globale Registrierung:
+
+```sql
+create table if not exists public.training_app_settings (
+  key text primary key,
+  value jsonb not null default 'null'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.training_app_settings enable row level security;
+
+drop policy if exists "Allow public read registration setting" on public.training_app_settings;
+create policy "Allow public read registration setting"
+on public.training_app_settings
+for select
+to anon, authenticated
+using (key = 'registration_enabled');
+
+drop policy if exists "Allow registration admin write settings" on public.training_app_settings;
+create policy "Allow registration admin write settings"
+on public.training_app_settings
+for all
+to authenticated
+using (auth.jwt() ->> 'email' = 'thstaehli@gmail.com')
+with check (auth.jwt() ->> 'email' = 'thstaehli@gmail.com');
+
+insert into public.training_app_settings (key, value)
+values ('registration_enabled', 'false'::jsonb)
+on conflict (key) do nothing;
+```
 
 ## Trainingslogik
 
@@ -272,7 +306,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v87`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v88`.
 
 Kalender:
 

@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
 Stand: 29.06.2026
-App-Version: v87
+App-Version: v88
 
 ## 1. Zweck der App
 
@@ -422,3 +422,7 @@ Option ist nur fuer den Admin-User sichtbar:
 `thstaehli@gmail.com`
 
 Normale eingeloggte Nutzer sehen diese Option nicht.
+
+Wenn der Admin die Registrierung freigibt, wird diese Einstellung zentral in
+Supabase gespeichert. Neue Nutzer sehen danach auf ihren eigenen Geraeten den
+Button `Registrieren`, auch wenn sie noch nicht eingeloggt sind.

@@ -41,6 +41,7 @@ const defaultExerciseModes = Object.fromEntries(exerciseCatalog.map((exercise) =
 const storageKey = "training-cycle-state-v3";
 const legacyKey = "training-block-10-state-v2";
 const registrationEnabledKey = "training-registration-enabled";
+const registrationSettingKey = "registration_enabled";
 const registrationAdminEmail = "thstaehli@gmail.com";
 const supabaseUrl = "https://tnhwyrapdsqoklenzwjn.supabase.co";
 const supabaseKey = "sb_publishable_l6CdhfG_yUH1Nb9JsjhrkA_8HbDKRYX";
@@ -56,6 +57,7 @@ let calendarExpanded = false;
 let settingsPhaseOpen = false;
 let exerciseModesOpen = false;
 let remoteUpdatedAt = null;
+let registrationEnabled = localStorage.getItem(registrationEnabledKey) === "true";
 
 let state = loadState();
 let initialPosition = findInitialPosition();
@@ -385,7 +387,6 @@ function withTimeout(promise, timeoutMs) {
 
 function renderAuth() {
   const signedIn = Boolean(syncUser);
-  const registrationEnabled = localStorage.getItem(registrationEnabledKey) === "true";
   const canManageRegistration = signedIn && syncUser?.email === registrationAdminEmail;
   document.querySelector("#auth-fields").hidden = signedIn;
   document.querySelector("#session-fields").hidden = !signedIn;
@@ -398,6 +399,61 @@ function renderAuth() {
     setSyncStatus(supabaseClient ? "Nicht verbunden" : "Supabase nicht geladen");
   }
   renderGate();
+}
+
+function setRegistrationEnabled(enabled) {
+  registrationEnabled = Boolean(enabled);
+  localStorage.setItem(registrationEnabledKey, registrationEnabled ? "true" : "false");
+}
+
+async function loadRegistrationSetting() {
+  if (!supabaseClient) return;
+
+  try {
+    const { data, error } = await withTimeout(
+      supabaseClient.from("training_app_settings").select("value").eq("key", registrationSettingKey).maybeSingle(),
+      10000,
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    if (data) {
+      setRegistrationEnabled(data.value === true);
+      renderAuth();
+    }
+  } catch (error) {
+    console.warn("Registration setting could not be loaded", error);
+  }
+}
+
+async function saveRegistrationSetting(enabled) {
+  setRegistrationEnabled(enabled);
+  renderAuth();
+
+  if (!supabaseClient) return;
+
+  try {
+    const { error } = await withTimeout(
+      supabaseClient.from("training_app_settings").upsert({
+        key: registrationSettingKey,
+        value: enabled,
+        updated_at: new Date().toISOString(),
+      }),
+      10000,
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    setSyncStatus(enabled ? "Registrierung freigegeben" : "Registrierung gesperrt");
+  } catch (error) {
+    setSyncStatus("Registrierung nur lokal geändert");
+    setLastSyncError(error);
+    console.error(error);
+  }
 }
 
 function renderGate() {
@@ -672,6 +728,8 @@ async function initSupabaseAuth() {
   renderAuth();
   if (!supabaseClient) return;
 
+  await loadRegistrationSetting();
+
   const { data } = await supabaseClient.auth.getSession();
   syncUser = data.session?.user || null;
   renderAuth();
@@ -682,6 +740,7 @@ async function initSupabaseAuth() {
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     syncUser = session?.user || null;
     renderAuth();
+    await loadRegistrationSetting();
   });
 }
 
@@ -2476,13 +2535,12 @@ document.querySelector("#skip-session").addEventListener("click", () => {
 });
 document.querySelector("#sign-in").addEventListener("click", signIn);
 document.querySelector("#sign-up").addEventListener("click", signUp);
-document.querySelector("#registration-toggle").addEventListener("change", (event) => {
+document.querySelector("#registration-toggle").addEventListener("change", async (event) => {
   if (syncUser?.email !== registrationAdminEmail) {
     renderAuth();
     return;
   }
-  localStorage.setItem(registrationEnabledKey, event.target.checked ? "true" : "false");
-  renderAuth();
+  await saveRegistrationSetting(event.target.checked);
 });
 document.querySelector("#auth-action").addEventListener("click", signOut);
 document.querySelector("#sync-now").addEventListener("click", pullRemoteState);
