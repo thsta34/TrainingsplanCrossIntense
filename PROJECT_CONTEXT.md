@@ -1,10 +1,12 @@
 # Projektkontext: Trainingsplan CrossIntense
 
-Stand: 27.05.2026
+Stand: 01.10.2026
 
 Aktuelle App-/Cache-Version: `v93`
 
 ## Aenderungsprotokoll
+
+- 01.10.2026: Serverseitiges Sicherungskonzept fuer Trainingsdaten ergaenzt. `supabase-training-backups.sql` legt vor jedem Update/Loeschen eine unveraenderliche Kopie des bisherigen States an, erstellt nachts einen Snapshot aller Benutzerstaende, behaelt Sicherungen 365 Tage und stellt eine geschuetzte Restore-Funktion fuer den SQL Editor bereit. Das SQL muss einmal im Supabase-Projekt ausgefuehrt werden; eine App-/Cache-Aenderung ist damit nicht verbunden.
 
 - 28.09.2026: Mobile Rasterposition bei Banduebungen explizit festgelegt. `Zusatz` steht in Spalte 1 und `Wdh.` in Spalte 2 derselben Zeile; das Wiederholungsfeld nutzt mobil die volle Spaltenbreite. Cache-/App-Version auf `v93` erhoeht.
 
@@ -95,6 +97,60 @@ Test-URL der Action:
 ```text
 https://tnhwyrapdsqoklenzwjn.supabase.co/rest/v1/training_app_states?select=user_id&limit=1
 ```
+
+## Supabase Trainingsdaten-Sicherungen
+
+Das wiederholt ausfuehrbare Setup liegt in:
+
+```text
+supabase-training-backups.sql
+```
+
+Es muss einmal im Supabase SQL Editor des Projekts `tnhwyrapdsqoklenzwjn`
+ausgefuehrt werden. Das Setup schuetzt gegen versehentliches Ueberschreiben und
+Loeschen auf Anwendungsebene:
+
+- Vor jeder inhaltlichen Aenderung eines Benutzerstands wird der bisherige Stand
+  in `public.training_app_state_backups` kopiert.
+- Vor dem Loeschen wird ebenfalls eine Kopie angelegt.
+- Beim Setup entsteht sofort eine Initialsicherung aller vorhandenen Staende.
+- Supabase Cron legt taeglich um `02:30 UTC` einen vollstaendigen Snapshot an.
+- Sicherungen werden 365 Tage aufbewahrt.
+- `anon` und `authenticated` haben keinen Tabellen- oder Funktionszugriff auf
+  die Sicherungen. Kontrolle und Restore erfolgen nur im SQL Editor.
+
+Sicherungen kontrollieren:
+
+```sql
+select id, user_id, backup_reason, source_updated_at, backed_up_at
+from public.training_app_state_backups
+order by backed_up_at desc
+limit 20;
+```
+
+Cron-Job kontrollieren:
+
+```sql
+select jobid, jobname, schedule, command, active
+from cron.job
+where jobname = 'nightly-training-state-backup';
+```
+
+Einen ausgewaehlten Stand wiederherstellen:
+
+```sql
+select private.restore_training_app_state_backup(123);
+```
+
+`123` muss durch die gepruefte Backup-ID ersetzt werden. Beim Restore sichert
+der Trigger den aktuell vorhandenen Stand nochmals als `before-update`, sodass
+auch eine versehentlich falsche Wiederherstellung rueckgaengig gemacht werden
+kann.
+
+Wichtig: Diese Versionen liegen im selben Supabase-Projekt und schuetzen primaer
+vor fehlerhaftem Sync, Ueberschreiben und Loeschen. Fuer einen vollstaendigen
+Ausfall des gesamten Supabase-Projekts ist zusaetzlich ein externer Export oder
+ein Supabase-Datenbankbackup/PITR erforderlich.
 
 Nach Aenderungen:
 
