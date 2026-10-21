@@ -823,6 +823,7 @@ async function initSupabaseAuth() {
     renderAuth();
     if (syncUser) {
       await syncAfterSignIn();
+      setView("training");
     }
   } finally {
     isInitialAuthLoading = false;

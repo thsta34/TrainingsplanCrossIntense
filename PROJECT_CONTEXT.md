@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v100`
+Aktuelle App-/Cache-Version: `v101`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Training nach automatischem Login/Initial-Sync sofort neu positioniert und gerendert. Zuvor konnte bei einem geschuetzten lokalen Stand die Trainingsansicht leer bleiben, bis einmal zu `Statistik` und zurueck gewechselt wurde. Die Sync- und Datenspeicherlogik bleibt unveraendert. Cache-/App-Version auf `v101` erhoeht.
 
 - 21.10.2026: Sync-Blockade bei leerem lokalem Handy-Stand behoben. Ein lokaler `pendingSync`-Marker schuetzt weiterhin jeden vorhandenen lokalen Plan vor einem Remote-Overwrite. Ist der lokale Plan jedoch vollstaendig leer und Supabase enthaelt Phasen, darf der Remote-Stand wieder geladen werden; `applyRemoteState` legt davor weiterhin die lokale Importsicherung an. Cache-/App-Version auf `v100` erhoeht.
 
