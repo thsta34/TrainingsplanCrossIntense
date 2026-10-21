@@ -1126,6 +1126,36 @@ textarea {
   font-weight: 800;
 }
 
+.stats-group-card {
+  display: block;
+}
+
+.stats-group-card > div:first-child {
+  margin-bottom: 10px;
+}
+
+.stats-group-list {
+  display: grid;
+  gap: 8px;
+}
+
+.stats-group-row {
+  min-width: 0;
+  padding-top: 8px;
+}
+
+.stats-group-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  min-width: 0;
+}
+
+.stats-group-detail .summary-meta {
+  margin-top: 2px;
+}
+
 .summary-note {
   margin-top: 3px;
   color: var(--warn);

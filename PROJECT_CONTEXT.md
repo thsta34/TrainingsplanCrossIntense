@@ -2,9 +2,15 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v102`
+Aktuelle App-/Cache-Version: `v105`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Trennlinien innerhalb der gemeinsamen A2-Statistikkarte entfernt. Cache-/App-Version auf `v105` erhoeht.
+
+- 21.10.2026: Gemeinsame A2-Statistikkarte vertikal ausgerichtet: Uebungskopf oben, darunter getrennte Abschnitte fuer Band/Koerper und KZ; je Abschnitt stehen PB-Satz links und Leistung rechts. Cache-/App-Version auf `v104` erhoeht, damit die bereits lokal geladene v103-CSS nicht weiterverwendet wird.
+
+- 21.10.2026: e1RM-Erklaerung und A2-Kabelzugbewertung praezisiert. Bei aktivem `KZ` wird das eingetragene Kabelzuggewicht zusammen mit 1 bis 12 Wiederholungen nach e1RM bewertet; fuer Band/Koerper (mit und ohne Zusatzgewicht) bleibt die bisherige Bewertung bestehen. Da A2 wechselweise mit KZ oder Band/Koerper ausgefuehrt werden kann, werden beide PB-Kategorien getrennt ausgewiesen; in der Statistik stehen beide Zeilen gemeinsam in einer A2-Karte. Bestehende Satzdaten bleiben unveraendert und werden nur entsprechend ausgewertet. Cache-/App-Version auf `v103` erhoeht.
 
 - 21.10.2026: Mobilen Start nach bestehendem Login korrigiert und beschleunigt. Der lokale Trainingsplan wird unmittelbar nach Erkennen der lokalen Session angezeigt; Registrierungseinstellung und Remote-Sync laufen danach parallel, wobei vorgemerkte lokale Aenderungen weiterhin nicht ueberschrieben werden. `app.js` und `styles.css` werden versionsgebunden geladen, und der Service Worker aktualisiert den Precache ohne veraltete HTTP-Cache-Dateien. Dadurch entsteht nach Deployments kein Mischbetrieb aus neuer HTML- und alter JavaScript-Version. Mobile Breite unveraendert und ohne horizontalen Overflow getestet. Cache-/App-Version auf `v102` erhoeht.
 

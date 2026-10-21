@@ -240,11 +240,28 @@ function compareSetResults(a, b) {
 }
 
 function estimatedOneRepMax(performance, reps) {
-  if (!performance || performance.kind === "bands") return null;
-  const weight = Number(performance.value || 0);
+  if (!performance) return null;
+  const weight = performance.kind === "bands"
+    ? performance.raw?.cablePull
+      ? Number(performance.raw.extraWeight || 0)
+      : 0
+    : Number(performance.value || 0);
   const repetitionCount = Number(reps || 0);
   if (weight <= 0 || repetitionCount < 1 || repetitionCount > 12) return null;
   return weight * (1 + repetitionCount / 30);
+}
+
+function trainingPrKey(code, result) {
+  if (code !== "A2" || result?.performance?.kind !== "bands") return code;
+  return result.performance.raw?.cablePull ? `${code}:cable` : `${code}:band-body`;
+}
+
+function trainingPrItems(prs, code) {
+  if (code !== "A2") return prs[code] ? [{ label: "PB", result: prs[code] }] : [];
+  return [
+    { label: "PB KZ", result: prs[`${code}:cable`] },
+    { label: "PB Band/Körper", result: prs[`${code}:band-body`] },
+  ].filter((item) => item.result);
 }
 
 function formatBandValue(value) {
@@ -1260,8 +1277,9 @@ function calculatePrs(beforeDate = null) {
       const result = exerciseSetPerformance(meta, entry, 2);
       if (!result) return;
 
-      if (!prs[code] || compareSetResults(result, prs[code]) > 0) {
-        prs[code] = {
+      const prKey = trainingPrKey(code, result);
+      if (!prs[prKey] || compareSetResults(result, prs[prKey]) > 0) {
+        prs[prKey] = {
           performance: result.performance,
           reps: result.reps,
           setNumber: result.setNumber,
@@ -1691,8 +1709,9 @@ function renderExercises() {
       const safeName = escapeHtml(displayMeta.name);
       const isSkipped = Boolean(entry.skipped);
       const highlightedSet = highlightedSetIndex(session, displayMeta, entry);
-      const pr = priorPrs[meta.code];
-      const prLabel = pr ? `<p class="pr-label">PB: ${formatPerformanceWithReps(pr.performance || pr, pr.reps)} · ${formatPrDate(pr.date)}</p>` : "";
+      const prLabel = trainingPrItems(priorPrs, meta.code)
+        .map(({ label, result }) => `<p class="pr-label">${label}: ${formatPerformanceWithReps(result.performance || result, result.reps)} · ${formatPrDate(result.date)}</p>`)
+        .join("");
       const contrastBest = session.phase === "contrast" ? contrastBestBefore(displayMeta.name, displayMeta.mode, session.date) : null;
       const contrastBestLabel = contrastBest
         ? `<p class="pr-label">Bestleistung: ${formatPerformance(contrastBest.performance)} · ${formatPrDate(contrastBest.date)}</p>`
@@ -2022,8 +2041,10 @@ function updateSummary() {
       const heavySet = performances[2];
       const best = performances.reduce((bestValue, current) => (comparePerformance(current, bestValue) > 0 ? current : bestValue), null);
       const display = heavySet ? formatPerformance(heavySet) : formatPerformance(best);
-      const storedPr = session.phase === "training" ? currentPrs[code] : null;
-      const prLine = storedPr ? `<div class="summary-note">Aktueller PB: ${formatPerformanceWithReps(storedPr.performance || storedPr, storedPr.reps)} · ${formatPrDate(storedPr.date)}</div>` : "";
+      const storedPrItems = session.phase === "training" ? trainingPrItems(currentPrs, code) : [];
+      const prLine = storedPrItems
+        .map(({ label, result }) => `<div class="summary-note">Aktueller ${label}: ${formatPerformanceWithReps(result.performance || result, result.reps)} · ${formatPrDate(result.date)}</div>`)
+        .join("");
 
       return `
         <div class="summary-card">
@@ -2060,9 +2081,13 @@ function collectTrainingStats() {
           const best = exerciseSetPerformance(meta, entry, 2);
           if (!best) return;
 
-          if (!stats[code] || compareSetResults(best, stats[code]) > 0) {
-            stats[code] = {
-              code,
+          const prKey = trainingPrKey(code, best);
+          const categoryLabel = prKey === `${code}:cable` ? "KZ" : prKey === `${code}:band-body` ? "Band/Körper" : "";
+          if (!stats[prKey] || compareSetResults(best, stats[prKey]) > 0) {
+            stats[prKey] = {
+              code: categoryLabel ? `${code} · ${categoryLabel}` : code,
+              baseCode: code,
+              categoryLabel,
               name: meta.name,
               date: session.date,
               setNumber: best.setNumber,
@@ -2149,9 +2174,44 @@ function renderStats() {
     return;
   }
 
-  grid.innerHTML = items
+  const displayItems = [];
+  const a2Items = statsMode === "training" ? items.filter((item) => item.baseCode === "A2") : [];
+  items.forEach((item) => {
+    if (item.baseCode !== "A2") {
+      displayItems.push(item);
+      return;
+    }
+    if (!displayItems.some((displayItem) => displayItem.a2Group)) {
+      displayItems.push({ a2Group: true, code: "A2", name: item.name, items: a2Items });
+    }
+  });
+
+  grid.innerHTML = displayItems
     .map(
-      (item) => `
+      (item) => item.a2Group
+        ? `
+          <div class="summary-card stats-group-card">
+            <div>
+              <span class="label">${escapeHtml(item.code)}</span>
+              <div>${escapeHtml(item.name)}</div>
+            </div>
+            <div class="stats-group-list">
+              ${item.items.map((groupItem) => `
+                <div class="stats-group-row">
+                  <span class="label">${escapeHtml(groupItem.categoryLabel)}</span>
+                  <div class="stats-group-detail">
+                    <div class="summary-meta">${groupItem.setLabel}: Satz ${groupItem.setNumber} · ${formatPrDate(groupItem.date)}</div>
+                    <div class="stats-result">
+                      <strong>${formatPerformance(groupItem.performance)} · ${groupItem.reps === "" ? "Wdh. –" : `${groupItem.reps} Wdh.`}</strong>
+                      ${estimatedOneRepMax(groupItem.performance, groupItem.reps) === null ? "" : `<span>e1RM ${formatKg(estimatedOneRepMax(groupItem.performance, groupItem.reps))}</span>`}
+                    </div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `
+        : `
         <div class="summary-card">
           <div>
             <span class="label">${escapeHtml(item.code)}</span>
