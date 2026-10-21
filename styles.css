@@ -1206,38 +1206,6 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .band-controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .bodyweight-toggle {
-    grid-column: auto;
-  }
-
-  .cable-pull-toggle {
-    grid-column: 1;
-    grid-row: 3;
-  }
-
-  .band-extra {
-    grid-column: 1;
-    grid-row: 3;
-  }
-
-  .cable-pull-toggle ~ .band-extra {
-    grid-row: 4;
-  }
-
-  .band-controls > .reps-input {
-    grid-column: 2;
-    grid-row: 3;
-    width: 100%;
-  }
-
-  .cable-pull-toggle ~ .reps-input {
-    grid-row: 4;
-  }
-
   .calendar-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1282,5 +1250,32 @@ textarea {
 
   .hidden-field {
     display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .band-controls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .band-toggle {
+    min-width: 0;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .band-toggle input {
+    margin-right: 4px;
+  }
+
+  .band-extra {
+    grid-column: 1 / 4;
+    grid-row: 2;
+  }
+
+  .band-controls > .reps-input {
+    grid-column: 4 / 6;
+    grid-row: 2;
+    width: 100%;
   }
 }

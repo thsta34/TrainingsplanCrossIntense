@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v96`
+Aktuelle App-/Cache-Version: `v97`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Mobiles Bandraster anhand des realen Handy-Screenshots korrigiert. Bis 600 px stehen die fuenf A2-Optionen `Gruen`, `Rot`, `Schwarz`, `Koerper`, `KZ` in einer gemeinsamen, auf die Kartenbreite begrenzten Zeile; `Zusatz / KZ` und `Wdh.` folgen darunter. Cache-/App-Version auf `v97` erhoeht.
 
 - 21.10.2026: Die erste mobile KZ-Rasteranpassung aus `v95` vollstaendig ersetzt, weil die spezifische Rasterregel auch mobil die Desktop-Spaltenbreiten erzwang. Die neue Regel veraendert keine Spaltenbreiten: Sie positioniert ausschliesslich `KZ` nach `Koerper` und verschiebt bei A2 `Zusatz / KZ` sowie `Wdh.` in die Folgezeile. Cache-/App-Version auf `v96` erhoeht.
 
