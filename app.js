@@ -229,9 +229,22 @@ function comparePerformance(a, b) {
 function compareSetResults(a, b) {
   if (!b) return 1;
   if (!a) return -1;
+  const aEstimatedOneRepMax = estimatedOneRepMax(a.performance, a.reps);
+  const bEstimatedOneRepMax = estimatedOneRepMax(b.performance, b.reps);
+  if (aEstimatedOneRepMax !== null && bEstimatedOneRepMax !== null && aEstimatedOneRepMax !== bEstimatedOneRepMax) {
+    return aEstimatedOneRepMax - bEstimatedOneRepMax;
+  }
   const performanceComparison = comparePerformance(a.performance, b.performance);
   if (performanceComparison !== 0) return performanceComparison;
   return Number(a.reps || 0) - Number(b.reps || 0);
+}
+
+function estimatedOneRepMax(performance, reps) {
+  if (!performance || performance.kind === "bands") return null;
+  const weight = Number(performance.value || 0);
+  const repetitionCount = Number(reps || 0);
+  if (weight <= 0 || repetitionCount < 1 || repetitionCount > 12) return null;
+  return weight * (1 + repetitionCount / 30);
 }
 
 function formatBandValue(value) {
@@ -2126,9 +2139,12 @@ function renderStats() {
           <div>
             <span class="label">${escapeHtml(item.code)}</span>
             <div>${escapeHtml(item.name)}</div>
-            <div class="summary-meta">${item.setLabel}: Satz ${item.setNumber} · ${item.reps === "" ? "Wdh. –" : `${item.reps} Wdh.`} · ${formatPrDate(item.date)}</div>
+            <div class="summary-meta">${item.setLabel}: Satz ${item.setNumber} · ${formatPrDate(item.date)}</div>
           </div>
-          <strong>${formatPerformance(item.performance)}</strong>
+          <div class="stats-result">
+            <strong>${formatPerformance(item.performance)} · ${item.reps === "" ? "Wdh. –" : `${item.reps} Wdh.`}</strong>
+            ${estimatedOneRepMax(item.performance, item.reps) === null ? "" : `<span>e1RM ${formatKg(estimatedOneRepMax(item.performance, item.reps))}</span>`}
+          </div>
         </div>
       `,
     )

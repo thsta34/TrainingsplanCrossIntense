@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v97`
+Aktuelle App-/Cache-Version: `v98`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Statistik um Wiederholungen und geschaetztes Einwiederholungsmaximum (e1RM) erweitert. Fuer Gewichtsuebungen bestimmt bei 1 bis 12 Wiederholungen der hoechste Epley-e1RM (`Gewicht * (1 + Wiederholungen / 30)`) den PB; Gewicht und Wiederholungen dienen danach als Gleichstandsregel. Band-, Koerper- und KZ-Werte behalten ihre bisherige Bewertung. Die Statistik erklaert Definition und Formel direkt oberhalb der Ergebnisse. Cache-/App-Version auf `v98` erhoeht.
 
 - 21.10.2026: Mobiles Bandraster anhand des realen Handy-Screenshots korrigiert. Bis 600 px stehen die fuenf A2-Optionen `Gruen`, `Rot`, `Schwarz`, `Koerper`, `KZ` in einer gemeinsamen, auf die Kartenbreite begrenzten Zeile; `Zusatz / KZ` und `Wdh.` folgen darunter. Cache-/App-Version auf `v97` erhoeht.
 
@@ -507,6 +509,7 @@ Bekannte Problemstellen aus der Entwicklung:
 - Band-Aenderungen werden fuer Mobile zusaetzlich nach `pointerup`, `touchend` und `click` mit kurzem Timeout erneut synchronisiert und gespeichert. Das ist wichtig, weil der Browser den Checkbox-Zustand teils erst nach dem Touch-Event sichtbar umschaltet.
 - Wichtig: Bei Band-Sync darf die allgemeine Satzlogik nur `input[data-set]` lesen. `.band-controls` hat ebenfalls `data-set` fuer die Satznummer, darf aber nicht als normales Zahlenfeld interpretiert werden.
 - Bei Service-Worker/Cache-Problemen hilft auf dem Handy oft eine URL mit Query-Parameter oder das Loeschen der Website-Daten.
+- Verbindliche mobile Layoutregel: Anpassungen duerfen die bestehende Karten- oder Seitenbreite niemals vergroessern und kein horizontales Scrollen bzw. Herauszoomen des Browsers ausloesen. Neue Bedienelemente muessen mit flexiblen Spalten wie `minmax(0, 1fr)` innerhalb der vorhandenen Breite angeordnet werden. Vor einem Release muss geprueft werden, dass keine spezifischere Desktop-Rasterregel den mobilen Breakpoint ueberschreibt.
 
 ## Wichtige Testfaelle
 
@@ -544,6 +547,7 @@ Nach groesseren Aenderungen testen:
 30. Mobile: Band-Totals aktualisieren sich direkt bei Checkbox-Wechsel
 31. Gewichtsfelder: keine negativen Werte und maximal zwei Nachkommastellen
 32. Settings: Version sichtbar und entspricht der Cache-Version in `sw.js`
+33. Mobile Breite: Seite und Karten bleiben unveraendert breit; kein horizontales Scrollen, kein automatisches Herauszoomen und keine feste Mindestbreite durch neue Bedienelemente
 
 ## Hinweise fuer Codex im Buero
 
