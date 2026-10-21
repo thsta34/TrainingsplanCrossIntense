@@ -1407,7 +1407,6 @@ function renderSetup() {
   }
 
   if (!phase) {
-    document.querySelector("#setup-label").textContent = "Planung";
     scheduleSettings.innerHTML = "";
     grid.className = "setup-grid";
     grid.innerHTML = `
@@ -1420,7 +1419,6 @@ function renderSetup() {
   }
 
   if (phase.type === "training") {
-    document.querySelector("#setup-label").textContent = `${phaseWeeks(phase)} Wochen`;
     scheduleSettings.innerHTML = `
       <label>
         <span>Training startet</span>
@@ -1451,7 +1449,6 @@ function renderSetup() {
     return;
   }
 
-  document.querySelector("#setup-label").textContent = `${phaseWeeks(phase)} Wochen`;
   scheduleSettings.innerHTML = `
     <label>
       <span>Kontrast startet</span>

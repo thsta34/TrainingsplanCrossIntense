@@ -2,9 +2,11 @@
 
 Stand: 22.10.2026
 
-Aktuelle App-/Cache-Version: `v108`
+Aktuelle App-/Cache-Version: `v109`
 
 ## Aenderungsprotokoll
+
+- 22.10.2026: Beschreibung der Phasenplanung um Wochenwahl und Standardwerte ergaenzt. Wochenanzeige neben dem Titel `Phasen` samt JavaScript-Zugriffen entfernt. App-/Cache-Version auf `v109` erhoeht; Daten- und Speicherlogik unveraendert.
 
 - 22.10.2026: Sichtbares Enddatum beim Erstellen entfernt. Feldreihenfolge: Typ, Startdatum, Wochen. Die automatische Berechnung der Phase bleibt erhalten. App-/Cache-Version auf `v108` erhoeht.
 
