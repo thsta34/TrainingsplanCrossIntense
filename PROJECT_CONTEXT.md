@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v101`
+Aktuelle App-/Cache-Version: `v102`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Mobilen Start nach bestehendem Login korrigiert und beschleunigt. Der lokale Trainingsplan wird unmittelbar nach Erkennen der lokalen Session angezeigt; Registrierungseinstellung und Remote-Sync laufen danach parallel, wobei vorgemerkte lokale Aenderungen weiterhin nicht ueberschrieben werden. `app.js` und `styles.css` werden versionsgebunden geladen, und der Service Worker aktualisiert den Precache ohne veraltete HTTP-Cache-Dateien. Dadurch entsteht nach Deployments kein Mischbetrieb aus neuer HTML- und alter JavaScript-Version. Mobile Breite unveraendert und ohne horizontalen Overflow getestet. Cache-/App-Version auf `v102` erhoeht.
 
 - 21.10.2026: Training nach automatischem Login/Initial-Sync sofort neu positioniert und gerendert. Zuvor konnte bei einem geschuetzten lokalen Stand die Trainingsansicht leer bleiben, bis einmal zu `Statistik` und zurueck gewechselt wurde. Die Sync- und Datenspeicherlogik bleibt unveraendert. Cache-/App-Version auf `v101` erhoeht.
 

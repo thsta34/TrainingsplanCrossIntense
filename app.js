@@ -816,14 +816,23 @@ async function initSupabaseAuth() {
   }
 
   try {
-    await loadRegistrationSetting();
-
     const { data } = await supabaseClient.auth.getSession();
     syncUser = data.session?.user || null;
     renderAuth();
+
+    // The local plan can be shown as soon as the locally stored session is known.
+    // Registration settings and remote data must not delay the first usable view.
+    isInitialAuthLoading = false;
     if (syncUser) {
-      await syncAfterSignIn();
       setView("training");
+    }
+
+    const registrationPromise = loadRegistrationSetting();
+    if (syncUser) {
+      await Promise.all([registrationPromise, syncAfterSignIn()]);
+      setView("training");
+    } else {
+      await registrationPromise;
     }
   } finally {
     isInitialAuthLoading = false;

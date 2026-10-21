@@ -1,9 +1,9 @@
-const CACHE_NAME = "training-plan-v101";
+const CACHE_NAME = "training-plan-v102";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
+  "./styles.css?v=102",
+  "./app.js?v=102",
   "./manifest.webmanifest",
   "./CIT_Logo-Schwarz.png",
   "./favicon.ico",
@@ -14,7 +14,13 @@ const ASSETS = [
   "./icon-192.png",
   "./icon-512.png",
 ];
-const ASSET_URLS = new Set(ASSETS.map((asset) => new URL(asset, self.location.href).href));
+const ASSET_URLS = new Set(
+  ASSETS.map((asset) => {
+    const url = new URL(asset, self.location.href);
+    url.search = "";
+    return url.href;
+  }),
+);
 
 function cacheKeyFor(request) {
   const url = new URL(request.url);
@@ -31,7 +37,18 @@ function isCacheableAppRequest(request) {
 }
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        ASSETS.map(async (asset) => {
+          const request = new Request(new URL(asset, self.location.href), { cache: "reload" });
+          const response = await fetch(request);
+          if (!response.ok) throw new Error(`Precache failed: ${request.url}`);
+          await cache.put(cacheKeyFor(request), response);
+        }),
+      ),
+    ),
+  );
   self.skipWaiting();
 });
 
