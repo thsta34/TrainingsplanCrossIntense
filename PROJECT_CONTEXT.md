@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v99`
+Aktuelle App-/Cache-Version: `v100`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Sync-Blockade bei leerem lokalem Handy-Stand behoben. Ein lokaler `pendingSync`-Marker schuetzt weiterhin jeden vorhandenen lokalen Plan vor einem Remote-Overwrite. Ist der lokale Plan jedoch vollstaendig leer und Supabase enthaelt Phasen, darf der Remote-Stand wieder geladen werden; `applyRemoteState` legt davor weiterhin die lokale Importsicherung an. Cache-/App-Version auf `v100` erhoeht.
 
 - 21.10.2026: Rote PB-Anzeige bei den Trainingsuebungen auf die neue Bewertungslogik angepasst. Sie verwendet nun ebenfalls den PB-Satz (Satz 3), Wiederholungen und e1RM-Vergleich ueber alle vor dem aktuell geoeffneten Training liegenden erledigten Trainings und zeigt Gewicht, Wiederholungen, e1RM sowie Datum an. Das aktuell geoeffnete Training bleibt bewusst ausgeschlossen, damit waehrend dieses Trainings die zu schlagende bisherige Bestleistung sichtbar ist. Bestehende Trainingsdaten werden nur neu ausgewertet und nicht veraendert. Cache-/App-Version auf `v99` erhoeht.
 

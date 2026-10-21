@@ -543,7 +543,10 @@ function hasPendingLocalChanges() {
 }
 
 function shouldProtectLocalState(remoteState, updatedAt) {
-  return Boolean(remoteState && hasPendingLocalChanges());
+  if (!remoteState || !hasPendingLocalChanges()) return false;
+  const localHasPlan = Array.isArray(state.phases) && state.phases.length > 0;
+  const remoteHasPlan = Array.isArray(remoteState.phases) && remoteState.phases.length > 0;
+  return localHasPlan || !remoteHasPlan;
 }
 
 function applyRemoteState(remoteState) {
