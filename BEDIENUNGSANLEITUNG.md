@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
 Stand: 22.10.2026
-App-Version: v109
+App-Version: v110
 
 ## 1. Zweck der App
 

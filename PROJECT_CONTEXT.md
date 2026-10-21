@@ -2,9 +2,11 @@
 
 Stand: 22.10.2026
 
-Aktuelle App-/Cache-Version: `v109`
+Aktuelle App-/Cache-Version: `v110`
 
 ## Aenderungsprotokoll
+
+- 22.10.2026: Aufgeklappte Uebungsverwaltung zeigt nur fuer den Registrierungs-Admin `thstaehli@gmail.com` einen Hinweis zu Standard-Hilfsmitteln neuer Benutzer und zur benutzerspezifischen Verwaltung. Der Hinweis haengt von der Admin-Identitaet ab, nicht vom Zustand des Registrierungshakens. Standardzuordnungen und Daten bleiben unveraendert. App-/Cache-Version auf `v110` erhoeht.
 
 - 22.10.2026: Beschreibung der Phasenplanung um Wochenwahl und Standardwerte ergaenzt. Wochenanzeige neben dem Titel `Phasen` samt JavaScript-Zugriffen entfernt. App-/Cache-Version auf `v109` erhoeht; Daten- und Speicherlogik unveraendert.
 

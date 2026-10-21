@@ -1504,6 +1504,13 @@ function renderExerciseModeSettings() {
   const contrastRows = collectGlobalContrastExercises().map(renderGlobalContrastManagementRow).join("");
 
   container.innerHTML = `
+    ${syncUser?.email === registrationAdminEmail ? `
+      <div class="settings-note" id="exercise-defaults-note">
+        <strong>Standardwerte für neue Benutzer</strong>
+        <span>Neue Benutzer starten mit den vorgegebenen A-/B-Übungen: Bänder bei A2, A10, A14 und A18; Hantel bei A6, B16 und B20; Stange bei allen übrigen Übungen. Die Kontrastübungsliste ist zunächst leer.</span>
+        <span>Jeder Benutzer verwaltet seine Übungen und Hilfsmittel für sich. Deine persönlichen Anpassungen werden nicht auf neue oder andere Benutzer übertragen. Die globale Kontrastübungsliste gilt nur für die Phasen des jeweiligen Benutzers.</span>
+      </div>
+    ` : ""}
     <section class="exercise-management-section">
       <h3>Training</h3>
       ${trainingRows}

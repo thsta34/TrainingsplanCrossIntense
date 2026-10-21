@@ -10,6 +10,7 @@ function node(selector) {
     value: selector === '#new-phase-type' ? 'training' : selector === '#new-phase-weeks' ? '4' : '',
     dataset: {}, listeners: {}, classList: { toggle() {}, add() {}, remove() {} },
     addEventListener(event, listener) { this.listeners[event] = listener; },
+    setAttribute() {},
     querySelectorAll() { return []; }, querySelector() { return null; },
   });
   return nodes.get(selector);
@@ -105,4 +106,10 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 assert.equal(html.includes('new-phase-end'), false);
 assert.ok(html.indexOf('id="new-phase-type"') < html.indexOf('id="new-phase-date"'));
 assert.ok(html.indexOf('id="new-phase-date"') < html.indexOf('id="new-phase-weeks"'));
+for (const email of [null, 'other@example.invalid', 'thstaehli@gmail.com']) {
+  context.testEmail = email;
+  vm.runInContext('syncUser = testEmail ? { email: testEmail } : null; registrationEnabled = false; renderExerciseModeSettings();', context);
+  assert.equal(node('#exercise-mode-list').innerHTML.includes('id="exercise-defaults-note"'), email === 'thstaehli@gmail.com');
+}
 console.log('PASS: six type/duration combinations; defaults; 6/9/12 sessions; dates and year boundary; full state save/reload; legacy sessions retain IDs, notes, statuses, sets, reps and skip flags; library and sync timestamps retained; empty plan; pending-local protection; backup before remote import; field order.');
+console.log('PASS: exercise defaults note visible only to registration admin, including when registration is disabled.');
