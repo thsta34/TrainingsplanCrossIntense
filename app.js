@@ -164,7 +164,7 @@ const bandSupport = { green: 10, red: 4, black: 2 };
 const bandLabels = { green: "Grün", red: "Rot", black: "Schwarz" };
 
 function emptySetValue(mode) {
-  if (mode === "bands") return { bands: [], bodyweight: false, extraWeight: "" };
+  if (mode === "bands") return { bands: [], bodyweight: false, cablePull: false, extraWeight: "" };
   if (mode === "kettlebell") return { weight: "", count: 1 };
   return "";
 }
@@ -178,6 +178,7 @@ function normalizeSetValue(mode, value) {
     return {
       bands: Array.isArray(value.bands) ? value.bands : [],
       bodyweight: Boolean(value.bodyweight),
+      cablePull: Boolean(value.cablePull),
       extraWeight: value.extraWeight ?? "",
     };
   }
@@ -194,7 +195,7 @@ function normalizeSetValue(mode, value) {
 function isEmptySet(value) {
   if (typeof value === "object" && value !== null) {
     if (Object.hasOwn(value, "weight")) return value.weight === "";
-    return !value.bands?.length && !value.bodyweight && (value.extraWeight === "" || Number(value.extraWeight || 0) === 0);
+    return !value.bands?.length && !value.bodyweight && !value.cablePull && (value.extraWeight === "" || Number(value.extraWeight || 0) === 0);
   }
   return value === "";
 }
@@ -236,6 +237,7 @@ function compareSetResults(a, b) {
 function formatBandValue(value) {
   const extraWeight = Number(value.extraWeight || 0);
   const bands = value.bands || [];
+  if (value.cablePull) return `KZ + ${formatKg(extraWeight)}`;
   if (extraWeight > 0) return `Körpergewicht + ${formatKg(extraWeight)}`;
   if (value.bodyweight) return "Körpergewicht";
   return bands.map((band) => bandLabels[band]).join(" + ");
@@ -1791,6 +1793,8 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
   const isHeavySet = index === highlightedSet;
   const bands = value.bands || [];
   const bodyweight = Boolean(value.bodyweight);
+  const cablePull = Boolean(value.cablePull);
+  const supportsCablePull = meta.code === "A2";
 
   return `
     <div class="set-row band-set-row ${isHeavySet ? "heavy" : ""}">
@@ -1810,8 +1814,14 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
           <input type="checkbox" data-bodyweight ${bodyweight ? "checked" : ""} ${disabled ? "disabled" : ""} />
           <span>Körper</span>
         </label>
+        ${supportsCablePull ? `
+          <label class="band-toggle cable-pull-toggle">
+            <input type="checkbox" data-cable-pull ${cablePull ? "checked" : ""} ${disabled ? "disabled" : ""} />
+            <span>KZ</span>
+          </label>
+        ` : ""}
         <label class="band-extra">
-          <span>Zusatz</span>
+          <span>${supportsCablePull ? "Zusatz / KZ" : "Zusatz"}</span>
           <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.extraWeight)}" data-band-extra ${disabled ? "disabled" : ""} />
         </label>
         ${renderRepsInput(meta, index, reps, disabled)}
@@ -1850,9 +1860,10 @@ function syncFromInputs() {
     const setIndex = Number(controls.dataset.set);
     const extraInput = controls.querySelector("[data-band-extra]");
     const extraWeight = extraInput.value === "" ? "" : clampNumberInput(extraInput);
-    const bodyweight = controls.querySelector("[data-bodyweight]").checked || Number(extraWeight || 0) > 0;
-    const bands = bodyweight ? [] : Array.from(controls.querySelectorAll("[data-band]:checked")).map((input) => input.dataset.band);
-    session.exercises[code].sets[setIndex] = { bands, bodyweight, extraWeight };
+    const cablePull = Boolean(controls.querySelector("[data-cable-pull]")?.checked);
+    const bodyweight = !cablePull && (controls.querySelector("[data-bodyweight]").checked || Number(extraWeight || 0) > 0);
+    const bands = bodyweight || cablePull ? [] : Array.from(controls.querySelectorAll("[data-band]:checked")).map((input) => input.dataset.band);
+    session.exercises[code].sets[setIndex] = { bands, bodyweight, cablePull, extraWeight };
   });
 
   document.querySelectorAll(".kettlebell-controls").forEach((controls) => {
@@ -1881,7 +1892,7 @@ function safeSyncFromInputs() {
 }
 
 function bandInputFromTarget(target) {
-  return target.closest("[data-band], [data-bodyweight], [data-band-extra]") || target.closest(".band-toggle, .band-extra")?.querySelector("input");
+  return target.closest("[data-band], [data-bodyweight], [data-cable-pull], [data-band-extra]") || target.closest(".band-toggle, .band-extra")?.querySelector("input");
 }
 
 function normalizeBandChoice(target) {
@@ -1893,13 +1904,25 @@ function normalizeBandChoice(target) {
     controls.querySelectorAll("[data-band]").forEach((input) => {
       input.checked = false;
     });
+    const cablePull = controls.querySelector("[data-cable-pull]");
+    if (cablePull) cablePull.checked = false;
   }
   if (input.matches("[data-band]") && input.checked) {
     controls.querySelector("[data-bodyweight]").checked = false;
+    const cablePull = controls.querySelector("[data-cable-pull]");
+    if (cablePull) cablePull.checked = false;
     controls.querySelector("[data-band-extra]").value = "";
   }
+  if (input.matches("[data-cable-pull]") && input.checked) {
+    controls.querySelector("[data-bodyweight]").checked = false;
+    controls.querySelectorAll("[data-band]").forEach((input) => {
+      input.checked = false;
+    });
+  }
   if (input.matches("[data-band-extra]") && Number(input.value || 0) > 0) {
-    controls.querySelector("[data-bodyweight]").checked = true;
+    if (!controls.querySelector("[data-cable-pull]")?.checked) {
+      controls.querySelector("[data-bodyweight]").checked = true;
+    }
     controls.querySelectorAll("[data-band]").forEach((input) => {
       input.checked = false;
     });

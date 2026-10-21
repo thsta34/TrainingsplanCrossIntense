@@ -1,10 +1,12 @@
 # Projektkontext: Trainingsplan CrossIntense
 
-Stand: 01.10.2026
+Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v93`
+Aktuelle App-/Cache-Version: `v94`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: A2 `Klimmzuege enger Griff supiniert` um die Auswahl `KZ` erweitert. Das gemeinsame Gewichtsfeld heisst bei A2 `Zusatz / KZ`; Kabelzugwerte werden auch im PR als `KZ + ... kg` angezeigt. Bestehende Satzdaten bleiben kompatibel. Cache-/App-Version auf `v94` erhoeht.
 
 - 01.10.2026: Serverseitiges Sicherungskonzept fuer Trainingsdaten ergaenzt. `supabase-training-backups.sql` legt vor jedem Update/Loeschen eine unveraenderliche Kopie des bisherigen States an, erstellt nachts einen Snapshot aller Benutzerstaende, behaelt Sicherungen 365 Tage und stellt eine geschuetzte Restore-Funktion fuer den SQL Editor bereit. Das SQL muss einmal im Supabase-Projekt ausgefuehrt werden; eine App-/Cache-Aenderung ist damit nicht verbunden.
 
@@ -151,6 +153,18 @@ Wichtig: Diese Versionen liegen im selben Supabase-Projekt und schuetzen primaer
 vor fehlerhaftem Sync, Ueberschreiben und Loeschen. Fuer einen vollstaendigen
 Ausfall des gesamten Supabase-Projekts ist zusaetzlich ein externer Export oder
 ein Supabase-Datenbankbackup/PITR erforderlich.
+
+## Verbindlicher Deployment-Datenschutz
+
+Ein Deployment darf erst erfolgen, wenn folgende Punkte geprueft sind:
+
+1. Bestehende lokal gespeicherte und aus Supabase geladene States bleiben mit der neuen App-Version lesbar. Neue Felder muessen optional sein oder durch eine ausdruecklich getestete Migration ergaenzt werden.
+2. Keine Aenderung darf Storage-Keys, Session-IDs, Phasen, Uebungen, Satzwerte oder Sync-Metadaten still ersetzen, entfernen oder neu initialisieren.
+3. Initialer Login-/Remote-Sync darf lokale, noch nicht synchronisierte Aenderungen nicht ueberschreiben. Vor jedem Remote-Import bleibt die lokale Sicherheitskopie erhalten.
+4. Bei Aenderungen an Speicher-, Sync- oder Datenmodelllogik muessen Altbestand, Speichern, Neuladen und geraeteuebergreifender Sync gezielt getestet werden.
+5. Vor produktiven Schema- oder Datenmigrationen muss eine aktuelle, wiederherstellbare Supabase-Sicherung kontrolliert werden. Migrationen muessen zuerst ohne destruktive Schritte ausgelegt und separat rueckwaertskompatibel getestet werden.
+6. App-Version in `index.html` und Cache-Version in `sw.js` muessen gemeinsam erhoeht werden, damit kein Mischbetrieb aus alten und neuen Dateien entsteht.
+7. Nach dem Push muss die ausgelieferte GitHub-Pages-Version sowie ein bestehender Benutzerstand nach Neuladen kontrolliert werden. Bei einem Fehler wird nicht weiter migriert; stattdessen wird die vorherige App-Version ausgerollt und bei Bedarf ein geprueftes Backup wiederhergestellt.
 
 Nach Aenderungen:
 
