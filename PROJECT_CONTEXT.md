@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v105`
+Aktuelle App-/Cache-Version: `v106`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: In-App-Handbuch um die PB-Satzlogik und Statistikberechnung ergaenzt: Im Training zaehlt Satz 3, im Kontrast der automatisch beste Satz. Die Epley-e1RM-Formel und der Bereich von 1 bis 12 Wiederholungen sind erklaert; fuer A2 sind die getrennte KZ-e1RM- und Band/Koerper-Bewertung dokumentiert. Cache-/App-Version auf `v106` erhoeht.
 
 - 21.10.2026: Trennlinien innerhalb der gemeinsamen A2-Statistikkarte entfernt. Cache-/App-Version auf `v105` erhoeht.
 

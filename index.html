@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=105" />
+    <link rel="stylesheet" href="./styles.css?v=106" />
   </head>
   <body>
     <main class="app">
@@ -175,6 +175,9 @@
               <div class="handbook-detail">
                 <p><strong>PB</strong> bezeichnet deine bisher beste Leistung. <strong>PR-Tag</strong> markiert eine Einheit, in der ein neuer persönlicher Rekord vorgesehen ist.</p>
                 <p>Unter <strong>Statistik</strong> wechselst du zwischen Training und Kontrast. Angezeigt werden nur gültige Werte aus erledigten, nicht geskippten Übungen.</p>
+                <p><strong>Training:</strong> Für den PB zählt immer Satz 3. Bei Übungen mit Gewicht werden Gewicht und Wiederholungen mit dem geschätzten Einwiederholungsmaximum verglichen: <strong>e1RM = Gewicht × (1 + Wiederholungen ÷ 30)</strong>. Die Schätzung gilt für 1 bis 12 Wiederholungen.</p>
+                <p><strong>Kontrast:</strong> Hier zählt automatisch der beste erfasste Satz; dieser kann auch Satz 1, 2 oder 4 sein.</p>
+                <p><strong>A2 Klimmzüge:</strong> Für KZ und Band/Körper wird jeweils ein eigener PB aus Satz 3 geführt. KZ wird nach e1RM bewertet. Für Band/Körper – mit oder ohne Zusatzgewicht – bleibt die bisherige Bewertungslogik bestehen.</p>
               </div>
             </details>
 
@@ -276,11 +279,11 @@
           <button id="reset-app-state" class="danger-button" type="button">App zurücksetzen - ALLE Daten werden gelöscht</button>
         </section>
 
-        <p class="app-version">Version <span id="app-version">v105</span></p>
+        <p class="app-version">Version <span id="app-version">v106</span></p>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app.js?v=105"></script>
+    <script src="./app.js?v=106"></script>
   </body>
 </html>
