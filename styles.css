@@ -983,6 +983,10 @@ textarea {
   align-items: end;
 }
 
+.band-controls.supports-cable-pull {
+  grid-template-columns: repeat(5, minmax(62px, 1fr)) minmax(90px, 1fr) 82px;
+}
+
 .band-toggle {
   display: flex;
   align-items: center;
@@ -1214,15 +1218,28 @@ textarea {
     grid-column: auto;
   }
 
+  .band-controls.supports-cable-pull .cable-pull-toggle {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
   .band-extra {
     grid-column: 1;
     grid-row: 3;
+  }
+
+  .band-controls.supports-cable-pull .band-extra {
+    grid-row: 4;
   }
 
   .band-controls > .reps-input {
     grid-column: 2;
     grid-row: 3;
     width: 100%;
+  }
+
+  .band-controls.supports-cable-pull > .reps-input {
+    grid-row: 4;
   }
 
   .calendar-grid {

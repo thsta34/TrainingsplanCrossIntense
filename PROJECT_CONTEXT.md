@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v94`
+Aktuelle App-/Cache-Version: `v95`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Mobile Rasterposition der neuen A2-Auswahl `KZ` festgelegt. `KZ` erscheint direkt nach `Koerper`; `Zusatz / KZ` und `Wdh.` folgen gemeinsam in der naechsten Zeile. Cache-/App-Version auf `v95` erhoeht.
 
 - 21.10.2026: A2 `Klimmzuege enger Griff supiniert` um die Auswahl `KZ` erweitert. Das gemeinsame Gewichtsfeld heisst bei A2 `Zusatz / KZ`; Kabelzugwerte werden auch im PR als `KZ + ... kg` angezeigt. Bestehende Satzdaten bleiben kompatibel. Cache-/App-Version auf `v94` erhoeht.
 

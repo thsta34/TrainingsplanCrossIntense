@@ -1799,7 +1799,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
   return `
     <div class="set-row band-set-row ${isHeavySet ? "heavy" : ""}">
       <div class="set-number">Satz ${setNumber}</div>
-      <div class="band-controls" data-exercise="${escapeHtml(meta.code)}" data-set="${index}">
+      <div class="band-controls ${supportsCablePull ? "supports-cable-pull" : ""}" data-exercise="${escapeHtml(meta.code)}" data-set="${index}">
         ${["green", "red", "black"]
           .map(
             (band) => `
