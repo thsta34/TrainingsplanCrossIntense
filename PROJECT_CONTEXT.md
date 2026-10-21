@@ -1,10 +1,14 @@
 # Projektkontext: Trainingsplan CrossIntense
 
-Stand: 21.10.2026
+Stand: 22.10.2026
 
-Aktuelle App-/Cache-Version: `v106`
+Aktuelle App-/Cache-Version: `v108`
 
 ## Aenderungsprotokoll
+
+- 22.10.2026: Sichtbares Enddatum beim Erstellen entfernt. Feldreihenfolge: Typ, Startdatum, Wochen. Die automatische Berechnung der Phase bleibt erhalten. App-/Cache-Version auf `v108` erhoeht.
+
+- 22.10.2026: Phasendauer beim Erstellen waehlbar: 2, 3 oder 4 Wochen. Typwechsel setzt Training auf 4 und Kontrast auf 2 Wochen. Enddatum (letzter Trainingsfreitag), Kalender, Trainingsanzahl und Durchfuehrungszaehler richten sich nach der gespeicherten Wochenzahl. Bestehende Phasen ohne `weeks` behalten 4 Wochen Training bzw. 2 Wochen Kontrast; Normalisierung und Startdatumaenderung erhalten die gewaehlte Dauer und vorhandene Satzdaten. App-/Cache-Version auf `v107` erhoeht.
 
 - 21.10.2026: In-App-Handbuch um die PB-Satzlogik und Statistikberechnung ergaenzt: Im Training zaehlt Satz 3, im Kontrast der automatisch beste Satz. Die Epley-e1RM-Formel und der Bereich von 1 bis 12 Wiederholungen sind erklaert; fuer A2 sind die getrennte KZ-e1RM- und Band/Koerper-Bewertung dokumentiert. Cache-/App-Version auf `v106` erhoeht.
 
@@ -259,8 +263,13 @@ notify pgrst, 'reload schema';
 
 Es gibt Phasen:
 
-- 4 Wochen Training
-- 2 Wochen Kontrast
+- Training: standardmaessig 4 Wochen
+- Kontrast: standardmaessig 2 Wochen
+
+Beim Erstellen sind fuer beide Typen 2, 3 oder 4 Wochen waehlbar. `phase.weeks`
+speichert die Dauer; ohne dieses Feld gelten die bisherigen Standardwerte.
+Jede Woche hat drei Trainings (Mo/Mi/Fr). Das Enddatum ist der Freitag der
+letzten Woche, also Startdatum + `(weeks - 1) * 7 + 4` Tage.
 
 Eine Phase startet immer an einem Montag.
 
@@ -299,7 +308,9 @@ Zusaetzlich zum Skippen ganzer Trainings kann eine einzelne Uebung innerhalb ein
 
 ### Kontrasttraining
 
-Kontrastphasen dauern 2 Wochen und haben ebenfalls Montag, Mittwoch, Freitag, also 6 Trainings.
+Kontrastphasen dauern standardmaessig 2 Wochen (6 Trainings). Beim Erstellen
+sind auch 3 Wochen (9 Trainings) und 4 Wochen (12 Trainings) moeglich;
+trainiert wird jeweils Montag, Mittwoch und Freitag.
 
 Es gibt Kontrast 1 und Kontrast 2. Pro Kontrasttraining koennen bis zu 10 Uebungen eingetragen werden. Angezeigt werden nur Uebungen, die wirklich ausgefuellt sind.
 
@@ -405,6 +416,7 @@ Reiter:
 
 - Training
 - Statistik
+- Handbuch
 - Settings
 
 Beim Wechsel auf `Training` soll die App auf Basis des heutigen Datums automatisch die passende Phase und Einheit auswaehlen.
@@ -419,7 +431,7 @@ In den Settings:
 - Die alte Bedienung ueber `Phase bearbeiten` wurde entfernt.
 - Uebungsverwaltung ebenfalls per Plus/Minus auf- und zuklappbar.
 - Der manuelle Button `Jetzt syncen` steht nur noch in den Settings und nur, wenn ein User eingeloggt ist.
-- Unten in Settings steht die aktuelle Version, z.B. `Version v93`.
+- Unten in Settings steht die aktuelle Version, z.B. `Version v107`.
 
 Kalender:
 
@@ -528,6 +540,19 @@ Bekannte Problemstellen aus der Entwicklung:
 - Verbindliche mobile Layoutregel: Anpassungen duerfen die bestehende Karten- oder Seitenbreite niemals vergroessern und kein horizontales Scrollen bzw. Herauszoomen des Browsers ausloesen. Neue Bedienelemente muessen mit flexiblen Spalten wie `minmax(0, 1fr)` innerhalb der vorhandenen Breite angeordnet werden. Vor einem Release muss geprueft werden, dass keine spezifischere Desktop-Rasterregel den mobilen Breakpoint ueberschreibt.
 
 ## Wichtige Testfaelle
+
+Automatischer Regressionstest fuer variable Phasendauer und Datenerhalt:
+
+```powershell
+node tests/phase-duration.test.cjs
+```
+
+Der Test nutzt isolierte Beispieldaten ohne Supabase-Zugriff. Er prueft alle
+Typ-/Wochen-Kombinationen, Altbestaende ohne `weeks`, Speicher-/Ladezyklen,
+Startdatumaenderungen, Satzwerte, Wiederholungen, Skip-Markierungen, Notizen,
+globale Uebungen, Sync-Zeitstempel, den Schutz lokaler Aenderungen und die
+Sicherung vor einem Remote-Import. Er ersetzt keine visuelle Browserpruefung
+und bestaetigt nicht die Einrichtung der serverseitigen Supabase-Backups.
 
 Nach groesseren Aenderungen testen:
 

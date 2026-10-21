@@ -916,32 +916,44 @@ function normalizeContrastSlots(slots = []) {
   }));
 }
 
-function createTrainingPhase(startDate = defaultSchedule.trainingStartDate, selection = defaultTrainingSelection, existingSessions = []) {
+function phaseWeeks(phase) {
+  const weeks = Number(phase.weeks);
+  return [2, 3, 4].includes(weeks) ? weeks : phase.type === "training" ? 4 : 2;
+}
+
+function sessionOffsets(weeks) {
+  return Array.from({ length: weeks }, (_, week) => [0, 2, 4].map((day) => week * 7 + day)).flat();
+}
+
+function createTrainingPhase(startDate = defaultSchedule.trainingStartDate, selection = defaultTrainingSelection, existingSessions = [], weeks = 4) {
+  weeks = phaseWeeks({ type: "training", weeks });
   return {
     id: `phase-training-${startDate}`,
     type: "training",
     startDate,
+    weeks,
     selection: structuredClone(selection),
-    sessions: createTrainingSessions(startDate, existingSessions),
+    sessions: createTrainingSessions(startDate, existingSessions, weeks),
   };
 }
 
-function createContrastPhase(startDate = defaultSchedule.contrastStartDate, contrastSelection = defaultContrastSelection(), existingSessions = []) {
+function createContrastPhase(startDate = defaultSchedule.contrastStartDate, contrastSelection = defaultContrastSelection(), existingSessions = [], weeks = 2) {
+  weeks = phaseWeeks({ type: "contrast", weeks });
   return {
     id: `phase-contrast-${startDate}`,
     type: "contrast",
     startDate,
+    weeks,
     contrastSelection: {
       K1: normalizeContrastSlots(contrastSelection.K1),
       K2: normalizeContrastSlots(contrastSelection.K2),
     },
-    sessions: createContrastSessions(startDate, existingSessions),
+    sessions: createContrastSessions(startDate, existingSessions, weeks),
   };
 }
 
 function phaseEndDate(phase) {
-  const offsets = phase.type === "training" ? trainingOffsets : contrastOffsets;
-  return addDays(phase.startDate, offsets.at(-1));
+  return addDays(phase.startDate, (phaseWeeks(phase) - 1) * 7 + 4);
 }
 
 function phaseLabel(phase) {
@@ -966,17 +978,17 @@ function dedupePhases(phases) {
 
 function normalizePhase(phase) {
   if (phase.type === "contrast") {
-    return createContrastPhase(phase.startDate, phase.contrastSelection || defaultContrastSelection(), phase.sessions || []);
+    return createContrastPhase(phase.startDate, phase.contrastSelection || defaultContrastSelection(), phase.sessions || [], phaseWeeks(phase));
   }
 
-  return createTrainingPhase(phase.startDate, phase.selection || defaultTrainingSelection, phase.sessions || []);
+  return createTrainingPhase(phase.startDate, phase.selection || defaultTrainingSelection, phase.sessions || [], phaseWeeks(phase));
 }
 
-function createTrainingSessions(startDate = defaultSchedule.trainingStartDate, existingSessions = []) {
+function createTrainingSessions(startDate = defaultSchedule.trainingStartDate, existingSessions = [], weeks = 4) {
   let aCount = 0;
   let bCount = 0;
 
-  return trainingOffsets.map((offset, index) => {
+  return sessionOffsets(weeks).map((offset, index) => {
     const training = index % 2 === 0 ? "A" : "B";
     const pairOccurrence = training === "A" ? ++aCount : ++bCount;
     const existing = existingSessions[index] || {};
@@ -994,11 +1006,11 @@ function createTrainingSessions(startDate = defaultSchedule.trainingStartDate, e
   });
 }
 
-function createContrastSessions(startDate = defaultSchedule.contrastStartDate, existingSessions = []) {
+function createContrastSessions(startDate = defaultSchedule.contrastStartDate, existingSessions = [], weeks = 2) {
   let k1Count = 0;
   let k2Count = 0;
 
-  return contrastOffsets.map((offset, index) => {
+  return sessionOffsets(weeks).map((offset, index) => {
     const training = index % 2 === 0 ? "K1" : "K2";
     const occurrence = training === "K1" ? ++k1Count : ++k2Count;
     const existing = existingSessions[index] || {};
@@ -1408,7 +1420,7 @@ function renderSetup() {
   }
 
   if (phase.type === "training") {
-    document.querySelector("#setup-label").textContent = "4 Wochen";
+    document.querySelector("#setup-label").textContent = `${phaseWeeks(phase)} Wochen`;
     scheduleSettings.innerHTML = `
       <label>
         <span>Training startet</span>
@@ -1439,7 +1451,7 @@ function renderSetup() {
     return;
   }
 
-  document.querySelector("#setup-label").textContent = "2 Wochen";
+  document.querySelector("#setup-label").textContent = `${phaseWeeks(phase)} Wochen`;
   scheduleSettings.innerHTML = `
     <label>
       <span>Kontrast startet</span>
@@ -2273,7 +2285,8 @@ function renderScreen() {
   document.querySelector("#date-pill").textContent = isNoTrainingWeekday ? formatDate(today) : formatDate(session.date);
   document.querySelector("#session-position").textContent = `Training ${currentIndex + 1} / ${activeSessions().length}`;
   document.querySelector("#session-status").textContent = statusText(session.status);
-  document.querySelector("#occurrence-label").textContent = session.phase === "training" ? (occurrence ? `${occurrence} / 6` : "-") : `${occurrence} / 3`;
+  const pairCount = phase.sessions.filter((item) => item.training === session.training).length;
+  document.querySelector("#occurrence-label").textContent = session.phase === "training" ? (occurrence ? `${occurrence} / ${pairCount}` : "-") : `${occurrence} / ${pairCount}`;
   document.querySelector("#focus-label").textContent = isSkipped ? "Pause" : isPr ? "PR-Tag" : session.phase === "training" ? "Aufbau" : "Kontrast";
   document.querySelector("#pr-callout").hidden = !isPr;
   document.querySelector("#prev-session").disabled = currentIndex === 0;
@@ -2497,8 +2510,8 @@ function updatePhaseStart(input) {
   phase.id = nextPhaseId;
   phase.sessions =
     phase.type === "training"
-      ? createTrainingSessions(phase.startDate, phase.sessions)
-      : createContrastSessions(phase.startDate, phase.sessions);
+      ? createTrainingSessions(phase.startDate, phase.sessions, phaseWeeks(phase))
+      : createContrastSessions(phase.startDate, phase.sessions, phaseWeeks(phase));
   selectedPhaseId = phase.id;
   state.phases = dedupePhases(state.phases);
   ensureAllSessionExercises(state);
@@ -2517,9 +2530,12 @@ function addPhase() {
   syncFromInputs();
   const startDate = document.querySelector("#new-phase-date").value;
   const type = document.querySelector("#new-phase-type").value;
+  const weeks = phaseWeeks({ type, weeks: document.querySelector("#new-phase-weeks").value });
   if (!startDate) return;
 
-  const phase = type === "training" ? createTrainingPhase(startDate) : createContrastPhase(startDate);
+  const phase = type === "training"
+    ? createTrainingPhase(startDate, defaultTrainingSelection, [], weeks)
+    : createContrastPhase(startDate, defaultContrastSelection(), [], weeks);
   const existing = state.phases.find((item) => item.id === phase.id);
   const targetPhase = existing || phase;
   if (existing) {
@@ -2689,6 +2705,9 @@ document.querySelector("#exercise-mode-list").addEventListener("click", (event) 
 });
 
 document.querySelector("#add-phase").addEventListener("click", addPhase);
+document.querySelector("#new-phase-type").addEventListener("change", (event) => {
+  document.querySelector("#new-phase-weeks").value = event.target.value === "training" ? "4" : "2";
+});
 document.querySelector("#reset-app-state").addEventListener("click", resetAppState);
 document.querySelector("#toggle-exercise-modes").addEventListener("click", () => {
   exerciseModesOpen = !exerciseModesOpen;

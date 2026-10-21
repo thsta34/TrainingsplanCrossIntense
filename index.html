@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=106" />
+    <link rel="stylesheet" href="./styles.css?v=108" />
   </head>
   <body>
     <main class="app">
@@ -248,14 +248,22 @@
           </div>
           <div class="phase-create">
             <label>
-              <span>Startdatum</span>
-              <input id="new-phase-date" type="date" />
-            </label>
-            <label>
               <span>Typ</span>
               <select id="new-phase-type">
                 <option value="training">Training</option>
                 <option value="contrast">Kontrast</option>
+              </select>
+            </label>
+            <label>
+              <span>Startdatum</span>
+              <input id="new-phase-date" type="date" />
+            </label>
+            <label>
+              <span>Wochen</span>
+              <select id="new-phase-weeks">
+                <option value="2">2 Wochen</option>
+                <option value="3">3 Wochen</option>
+                <option value="4" selected>4 Wochen</option>
               </select>
             </label>
             <button id="add-phase" class="secondary-button" type="button">Phase hinzufügen</button>
@@ -279,11 +287,11 @@
           <button id="reset-app-state" class="danger-button" type="button">App zurücksetzen - ALLE Daten werden gelöscht</button>
         </section>
 
-        <p class="app-version">Version <span id="app-version">v106</span></p>
+        <p class="app-version">Version <span id="app-version">v108</span></p>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app.js?v=106"></script>
+    <script src="./app.js?v=108"></script>
   </body>
 </html>

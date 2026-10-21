@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
-Stand: 28.09.2026
-App-Version: v101
+Stand: 22.10.2026
+App-Version: v108
 
 ## 1. Zweck der App
 
@@ -17,8 +17,11 @@ https://thsta34.github.io/TrainingsplanCrossIntense/
 
 Die App arbeitet mit zwei Arten von Phasen:
 
-- Training: 4 Wochen mit Trainings am Montag, Mittwoch und Freitag
-- Kontrast: 2 Wochen mit Trainings am Montag, Mittwoch und Freitag
+- Training: standardmaessig 4 Wochen mit Trainings am Montag, Mittwoch und Freitag
+- Kontrast: standardmaessig 2 Wochen mit Trainings am Montag, Mittwoch und Freitag
+
+Beim Anlegen sind fuer beide Typen 2, 3 oder 4 Wochen waehlbar. Das Enddatum
+wird automatisch berechnet und entspricht dem letzten Trainingsfreitag.
 
 Eine Phase startet immer an einem Montag. Die App berechnet daraus automatisch
 alle Trainingstage.
@@ -313,9 +316,10 @@ abgleichen.
 
 Unter `Phasen` kannst du neue Trainings- oder Kontrastphasen anlegen.
 
-1. Startdatum auswaehlen.
-2. Typ auswaehlen: `Training` oder `Kontrast`.
-3. Auf `Phase hinzufuegen` klicken.
+1. Typ auswaehlen: `Training` oder `Kontrast`.
+2. Startdatum auswaehlen.
+3. Wochen waehlen: 2, 3 oder 4. Beim Typwechsel sind fuer Training 4 und fuer Kontrast 2 Wochen vorausgewaehlt.
+4. Auf `Phase hinzufuegen` klicken.
 
 Die App erstellt automatisch alle Trainingstage der Phase.
 
