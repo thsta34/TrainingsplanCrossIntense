@@ -983,10 +983,6 @@ textarea {
   align-items: end;
 }
 
-.band-controls.supports-cable-pull {
-  grid-template-columns: repeat(5, minmax(62px, 1fr)) minmax(90px, 1fr) 82px;
-}
-
 .band-toggle {
   display: flex;
   align-items: center;
@@ -1218,7 +1214,7 @@ textarea {
     grid-column: auto;
   }
 
-  .band-controls.supports-cable-pull .cable-pull-toggle {
+  .cable-pull-toggle {
     grid-column: 1;
     grid-row: 3;
   }
@@ -1228,7 +1224,7 @@ textarea {
     grid-row: 3;
   }
 
-  .band-controls.supports-cable-pull .band-extra {
+  .cable-pull-toggle ~ .band-extra {
     grid-row: 4;
   }
 
@@ -1238,7 +1234,7 @@ textarea {
     width: 100%;
   }
 
-  .band-controls.supports-cable-pull > .reps-input {
+  .cable-pull-toggle ~ .reps-input {
     grid-row: 4;
   }
 

@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v95`
+Aktuelle App-/Cache-Version: `v96`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Die erste mobile KZ-Rasteranpassung aus `v95` vollstaendig ersetzt, weil die spezifische Rasterregel auch mobil die Desktop-Spaltenbreiten erzwang. Die neue Regel veraendert keine Spaltenbreiten: Sie positioniert ausschliesslich `KZ` nach `Koerper` und verschiebt bei A2 `Zusatz / KZ` sowie `Wdh.` in die Folgezeile. Cache-/App-Version auf `v96` erhoeht.
 
 - 21.10.2026: Mobile Rasterposition der neuen A2-Auswahl `KZ` festgelegt. `KZ` erscheint direkt nach `Koerper`; `Zusatz / KZ` und `Wdh.` folgen gemeinsam in der naechsten Zeile. Cache-/App-Version auf `v95` erhoeht.
 
