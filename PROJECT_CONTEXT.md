@@ -2,9 +2,11 @@
 
 Stand: 21.10.2026
 
-Aktuelle App-/Cache-Version: `v98`
+Aktuelle App-/Cache-Version: `v99`
 
 ## Aenderungsprotokoll
+
+- 21.10.2026: Rote PB-Anzeige bei den Trainingsuebungen auf die neue Bewertungslogik angepasst. Sie verwendet nun ebenfalls den PB-Satz (Satz 3), Wiederholungen und e1RM-Vergleich ueber alle vor dem aktuell geoeffneten Training liegenden erledigten Trainings und zeigt Gewicht, Wiederholungen, e1RM sowie Datum an. Das aktuell geoeffnete Training bleibt bewusst ausgeschlossen, damit waehrend dieses Trainings die zu schlagende bisherige Bestleistung sichtbar ist. Bestehende Trainingsdaten werden nur neu ausgewertet und nicht veraendert. Cache-/App-Version auf `v99` erhoeht.
 
 - 21.10.2026: Statistik um Wiederholungen und geschaetztes Einwiederholungsmaximum (e1RM) erweitert. Fuer Gewichtsuebungen bestimmt bei 1 bis 12 Wiederholungen der hoechste Epley-e1RM (`Gewicht * (1 + Wiederholungen / 30)`) den PB; Gewicht und Wiederholungen dienen danach als Gleichstandsregel. Band-, Koerper- und KZ-Werte behalten ihre bisherige Bewertung. Die Statistik erklaert Definition und Formel direkt oberhalb der Ergebnisse. Cache-/App-Version auf `v98` erhoeht.
 

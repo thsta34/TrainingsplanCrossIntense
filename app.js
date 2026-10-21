@@ -267,6 +267,12 @@ function formatPerformance(performance) {
   return formatKg(performance.value);
 }
 
+function formatPerformanceWithReps(performance, reps) {
+  const repsLabel = reps === "" || reps === null || reps === undefined ? "Wdh. –" : `${reps} Wdh.`;
+  const estimate = estimatedOneRepMax(performance, reps);
+  return `${formatPerformance(performance)} · ${repsLabel}${estimate === null ? "" : ` · e1RM ${formatKg(estimate)}`}`;
+}
+
 function getTrainingRange() {
   return {
     start: addDays(state.schedule.trainingStartDate, trainingOffsets[0]),
@@ -1217,7 +1223,6 @@ function effectiveOccurrenceAt(index) {
 
 function calculatePrs(beforeDate = null) {
   const prs = {};
-  const fallbackPrs = {};
 
   const trainingSessions = state.phases
     .filter((phase) => phase.type === "training")
@@ -1234,29 +1239,28 @@ function calculatePrs(beforeDate = null) {
     if (beforeDate && session.date >= beforeDate) return;
     if (session.status !== "done") return;
 
-    const occurrence = effectiveOccurrenceInPhase(phase, index);
-
     Object.entries(session.exercises).forEach(([code, entry]) => {
       if (entry.skipped) return;
       const meta = { ...getCatalogExercise(code), mode: entry.mode || getCatalogExercise(code)?.mode, name: entry.name || getCatalogExercise(code)?.name };
       if (!meta) return;
 
-      const value = bestExerciseValue(meta, entry);
-      if (value === null) return;
+      const result = exerciseSetPerformance(meta, entry, 2);
+      if (!result) return;
 
-      const target = occurrence >= 5 ? prs : fallbackPrs;
-      if (!target[code] || comparePerformance(value, target[code].performance || target[code]) > 0) {
-        target[code] = {
-          performance: value,
+      if (!prs[code] || compareSetResults(result, prs[code]) > 0) {
+        prs[code] = {
+          performance: result.performance,
+          reps: result.reps,
+          setNumber: result.setNumber,
           date: session.date,
           sessionId: session.id,
-          source: occurrence >= 5 ? "pr-window" : "fallback",
+          source: "pb",
         };
       }
     });
   });
 
-  return { ...fallbackPrs, ...prs };
+  return prs;
 }
 
 function effectiveOccurrenceInPhase(phase, index) {
@@ -1675,7 +1679,7 @@ function renderExercises() {
       const isSkipped = Boolean(entry.skipped);
       const highlightedSet = highlightedSetIndex(session, displayMeta, entry);
       const pr = priorPrs[meta.code];
-      const prLabel = pr ? `<p class="pr-label">PR: ${formatPerformance(pr.performance || pr)} · ${formatPrDate(pr.date)}</p>` : "";
+      const prLabel = pr ? `<p class="pr-label">PB: ${formatPerformanceWithReps(pr.performance || pr, pr.reps)} · ${formatPrDate(pr.date)}</p>` : "";
       const contrastBest = session.phase === "contrast" ? contrastBestBefore(displayMeta.name, displayMeta.mode, session.date) : null;
       const contrastBestLabel = contrastBest
         ? `<p class="pr-label">Bestleistung: ${formatPerformance(contrastBest.performance)} · ${formatPrDate(contrastBest.date)}</p>`
@@ -2006,7 +2010,7 @@ function updateSummary() {
       const best = performances.reduce((bestValue, current) => (comparePerformance(current, bestValue) > 0 ? current : bestValue), null);
       const display = heavySet ? formatPerformance(heavySet) : formatPerformance(best);
       const storedPr = session.phase === "training" ? currentPrs[code] : null;
-      const prLine = storedPr ? `<div class="summary-note">Aktueller PR: ${formatPerformance(storedPr.performance || storedPr)} · ${formatPrDate(storedPr.date)}</div>` : "";
+      const prLine = storedPr ? `<div class="summary-note">Aktueller PB: ${formatPerformanceWithReps(storedPr.performance || storedPr, storedPr.reps)} · ${formatPrDate(storedPr.date)}</div>` : "";
 
       return `
         <div class="summary-card">
