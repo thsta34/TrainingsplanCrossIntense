@@ -2,9 +2,15 @@
 
 Stand: 22.10.2026
 
-Aktuelle App-/Cache-Version: `v110`
+Aktuelle App-/Cache-Version: `v113`
 
 ## Aenderungsprotokoll
+
+- 22.10.2026: Warnmeldung beim blockierten Verkuerzen einer Phase nennt geskippt, erledigt und noch nicht erledigt erfasste Trainings und fordert dazu auf, die betroffenen Trainings zuerst zu loeschen. App-/Cache-Version auf `v113` erhoeht.
+
+- 22.10.2026: Warnmeldung beim blockierten Verkuerzen einer Phase vereinfacht und explizit um bereits geskippt erfasste Trainings ergaenzt. App-/Cache-Version auf `v112` erhoeht.
+
+- 22.10.2026: Bestehende Trainings- und Kontrastphasen koennen in der aufgeklappten Phasenbox nachtraeglich auf 2, 3 oder 4 Wochen angepasst werden; die gespeicherte Dauer ist vorausgewaehlt. Beim Verlaengern bleiben vorhandene Sessions unveraendert und neue Trainingstage werden angefuegt. Eine Verkuerzung wird blockiert, sobald eine wegfallende Session Werte, Wiederholungen, Notizen, Skip-Markierungen oder einen nicht geplanten Status enthaelt. Startdatum und Wochen stehen mobil innerhalb der bestehenden Kartenbreite untereinander. App-/Cache-Version auf `v111` erhoeht.
 
 - 22.10.2026: Aufgeklappte Uebungsverwaltung zeigt nur fuer den Registrierungs-Admin `thstaehli@gmail.com` einen Hinweis zu Standard-Hilfsmitteln neuer Benutzer und zur benutzerspezifischen Verwaltung. Der Hinweis haengt von der Admin-Identitaet ab, nicht vom Zustand des Registrierungshakens. Standardzuordnungen und Daten bleiben unveraendert. App-/Cache-Version auf `v110` erhoeht.
 

@@ -921,6 +921,12 @@ function phaseWeeks(phase) {
   return [2, 3, 4].includes(weeks) ? weeks : phase.type === "training" ? 4 : 2;
 }
 
+function phaseWeekOptions(selectedWeeks) {
+  return [2, 3, 4]
+    .map((weeks) => `<option value="${weeks}" ${weeks === selectedWeeks ? "selected" : ""}>${weeks} Wochen</option>`)
+    .join("");
+}
+
 function sessionOffsets(weeks) {
   return Array.from({ length: weeks }, (_, week) => [0, 2, 4].map((day) => week * 7 + day)).flat();
 }
@@ -1424,6 +1430,10 @@ function renderSetup() {
         <span>Training startet</span>
         <input type="date" value="${phase.startDate}" data-phase-start />
       </label>
+      <label>
+        <span>Wochen</span>
+        <select data-phase-weeks>${phaseWeekOptions(phaseWeeks(phase))}</select>
+      </label>
     `;
     const options = exerciseCatalog
       .map((exercise) => `<option value="${exercise.code}">${exercise.code} - ${exercise.name}</option>`)
@@ -1453,6 +1463,10 @@ function renderSetup() {
     <label>
       <span>Kontrast startet</span>
       <input type="date" value="${phase.startDate}" data-phase-start />
+    </label>
+    <label>
+      <span>Wochen</span>
+      <select data-phase-weeks>${phaseWeekOptions(phaseWeeks(phase))}</select>
     </label>
   `;
   grid.className = "contrast-setup";
@@ -2524,6 +2538,42 @@ function updatePhaseStart(input) {
   renderScreen();
 }
 
+function sessionHasRecordedData(session) {
+  if (!session) return false;
+  if (session.status && session.status !== "planned") return true;
+  if ((session.notes || "").trim()) return true;
+  return Object.values(session.exercises || {}).some((entry) =>
+    Boolean(entry.skipped)
+    || (entry.sets || []).some((value) => !isEmptySet(value))
+    || (entry.reps || []).some((value) => normalizeReps(value) !== ""),
+  );
+}
+
+function updatePhaseWeeks(select) {
+  syncFromInputs();
+  const phase = getSelectedPhase();
+  if (!phase) return;
+  const previousWeeks = phaseWeeks(phase);
+  const nextWeeks = phaseWeeks({ type: phase.type, weeks: select.value });
+  if (nextWeeks === previousWeeks) return;
+
+  const removedSessions = phase.sessions.slice(nextWeeks * 3);
+  if (nextWeeks < previousWeeks && removedSessions.some(sessionHasRecordedData)) {
+    window.alert("Die Phase kann nicht verkürzt werden, da es bereits erfasste Trainings hat (dazu gehören geskippte, erledigte oder noch nicht erledigte Trainings). Bitte lösche vorher die betroffenen Trainings.");
+    select.value = String(previousWeeks);
+    return;
+  }
+
+  phase.weeks = nextWeeks;
+  phase.sessions = phase.type === "training"
+    ? createTrainingSessions(phase.startDate, phase.sessions, nextWeeks)
+    : createContrastSessions(phase.startDate, phase.sessions, nextWeeks);
+  ensureAllSessionExercises(state);
+  currentIndex = Math.max(0, Math.min(currentIndex, phase.sessions.length - 1));
+  saveState();
+  renderScreen();
+}
+
 function updateExerciseMode(select) {
   state.exerciseModes[select.dataset.exerciseMode] = select.value;
   saveState();
@@ -2642,6 +2692,12 @@ document.querySelector("#settings-view").addEventListener("change", (event) => {
   const scheduleInput = event.target.closest("[data-phase-start]");
   if (scheduleInput) {
     updatePhaseStart(scheduleInput);
+    return;
+  }
+
+  const weeksSelect = event.target.closest("[data-phase-weeks]");
+  if (weeksSelect) {
+    updatePhaseWeeks(weeksSelect);
     return;
   }
 

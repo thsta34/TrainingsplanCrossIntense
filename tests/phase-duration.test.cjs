@@ -5,6 +5,7 @@ const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 const nodes = new Map();
 const storage = new Map();
+const alerts = [];
 function node(selector) {
   if (!nodes.has(selector)) nodes.set(selector, {
     value: selector === '#new-phase-type' ? 'training' : selector === '#new-phase-weeks' ? '4' : '',
@@ -17,7 +18,7 @@ function node(selector) {
 }
 const context = vm.createContext({
   console, structuredClone, Intl, Date, setTimeout: () => 0, clearTimeout() {},
-  window: { setTimeout: () => 0, clearTimeout() {}, alert() {} }, navigator: {},
+  window: { setTimeout: () => 0, clearTimeout() {}, alert(message) { alerts.push(message); } }, navigator: {},
   document: { querySelector: node, querySelectorAll: () => [], addEventListener() {} },
   localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) },
 });
@@ -57,6 +58,32 @@ assert.deepEqual(run(`['training', 'contrast'].map(type => {
 })`), [[4, 12], [2, 6]]);
 assert.equal(run('phaseEndDate(createContrastPhase("2026-12-21", undefined, [], 3))'), '2027-01-08');
 assert.equal(run('phaseEndDate(createContrastPhase("2026-10-26", undefined, [], 3))'), '2026-11-13');
+node('#notes').value = 'bleibt erhalten';
+vm.runInContext(`
+  state = createInitialState();
+  state.phases = [createTrainingPhase('2026-10-26', defaultTrainingSelection, [], 2)];
+  selectedPhaseId = state.phases[0].id;
+  currentIndex = 0;
+  state.phases[0].sessions[0].status = 'done';
+  state.phases[0].sessions[0].notes = 'bleibt erhalten';
+  updatePhaseWeeks({ value: '4' });
+`, context);
+assert.equal(run('state.phases[0].weeks'), 4);
+assert.equal(run('state.phases[0].sessions.length'), 12);
+assert.equal(run('state.phases[0].sessions[0].status'), 'done');
+assert.equal(run('state.phases[0].sessions[0].notes'), 'bleibt erhalten');
+vm.runInContext('updatePhaseWeeks({ value: "3" });', context);
+assert.equal(run('state.phases[0].weeks'), 3);
+assert.equal(run('state.phases[0].sessions.length'), 9);
+context.phaseWeeksSelect = { value: '2' };
+vm.runInContext(`
+  state.phases[0].sessions[8].status = 'done';
+  updatePhaseWeeks(phaseWeeksSelect);
+`, context);
+assert.equal(run('state.phases[0].weeks'), 3);
+assert.equal(run('state.phases[0].sessions.length'), 9);
+assert.equal(context.phaseWeeksSelect.value, '3');
+assert.equal(alerts.at(-1), 'Die Phase kann nicht verkürzt werden, da es bereits erfasste Trainings hat (dazu gehören geskippte, erledigte oder noch nicht erledigte Trainings). Bitte lösche vorher die betroffenen Trainings.');
 const before = run(`(() => {
   const saved = createInitialState();
   saved.phases = [createTrainingPhase('2026-05-04'), createContrastPhase('2026-06-01')];
@@ -113,3 +140,4 @@ for (const email of [null, 'other@example.invalid', 'thstaehli@gmail.com']) {
 }
 console.log('PASS: six type/duration combinations; defaults; 6/9/12 sessions; dates and year boundary; full state save/reload; legacy sessions retain IDs, notes, statuses, sets, reps and skip flags; library and sync timestamps retained; empty plan; pending-local protection; backup before remote import; field order.');
 console.log('PASS: exercise defaults note visible only to registration admin, including when registration is disabled.');
+console.log('PASS: existing phase duration extends safely, shrinks only across empty sessions, and blocks shortening across recorded data.');

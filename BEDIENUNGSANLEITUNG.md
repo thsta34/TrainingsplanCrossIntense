@@ -330,8 +330,14 @@ Jede Phase hat einen Plus-/Minus-Button.
 Mit Plus kannst du die Details einer Phase aufklappen. Dort kannst du:
 
 - das Startdatum anpassen
+- die Dauer auf 2, 3 oder 4 Wochen anpassen; die aktuell gespeicherte Dauer ist vorausgewaehlt
 - bei Trainingsphasen die Uebungspaare fuer Training A und B waehlen
 - bei Kontrastphasen die Uebungen fuer Kontrast 1 und Kontrast 2 eintragen
+
+Beim Verlaengern werden neue Trainingstage angefuegt und bestehende Einheiten
+bleiben erhalten. Eine Verkuerzung wird blockiert, wenn in den wegfallenden
+Einheiten bereits Werte, Notizen, Skip-Markierungen oder ein Trainingsstatus
+gespeichert sind.
 
 ### Phasen loeschen
 
