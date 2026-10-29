@@ -2,9 +2,11 @@
 
 Stand: 29.10.2026
 
-Aktuelle App-/Cache-Version: `v114`
+Aktuelle App-/Cache-Version: `v115`
 
 ## Aenderungsprotokoll
+
+- 29.10.2026: Manuellen Sync korrigiert: `Jetzt syncen` laedt ohne lokale Aenderungen weiterhin den Serverstand, laedt bei vorgemerkten lokalen Aenderungen nun aber den lokalen Stand hoch und loest damit den bisherigen dauerhaften Schutzstatus auf. Wurde der Server seit dem letzten bekannten Sync ebenfalls geaendert, muss das Ersetzen des Serverstands ausdruecklich bestaetigt werden; bei Abbruch bleiben lokale und entfernte Daten unveraendert. App-/Cache-Version auf `v115` erhoeht.
 
 - 29.10.2026: Beim Erstellen einer Kontrastphase kann die Anzahl unterschiedlicher Trainingstage mit 2 oder 3 gewaehlt werden. Zwei Trainingstage rotieren weiterhin als K1/K2; drei Trainingstage werden als K1/K2/K3 auf Montag, Mittwoch und Freitag verteilt. Bestehende Kontrastphasen erhalten bei der Normalisierung explizit den bisherigen Wert 2; vorhandene Sessions, Uebungen und Leistungsdaten bleiben erhalten. App-/Cache-Version auf `v114` erhoeht.
 

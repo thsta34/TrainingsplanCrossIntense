@@ -566,6 +566,12 @@ function shouldProtectLocalState(remoteState, updatedAt) {
   return localHasPlan || !remoteHasPlan;
 }
 
+function remoteChangedSinceLastSync(updatedAt) {
+  if (!updatedAt) return false;
+  if (!state.lastRemoteSyncedAt) return true;
+  return new Date(updatedAt).getTime() > new Date(state.lastRemoteSyncedAt).getTime();
+}
+
 function applyRemoteState(remoteState) {
   if (!remoteState) return;
   isApplyingRemoteState = true;
@@ -892,6 +898,39 @@ function defaultContrastSelection() {
     K2: Array.from({ length: 10 }, (_, index) => blankContrastExercise(index)),
     K3: Array.from({ length: 10 }, (_, index) => blankContrastExercise(index)),
   };
+}
+
+async function syncNow() {
+  if (!supabaseClient || !syncUser) {
+    setSyncStatus("Nicht verbunden");
+    return;
+  }
+
+  if (!hasPendingLocalChanges()) {
+    await pullRemoteState();
+    return;
+  }
+
+  try {
+    setSyncStatus("Prüfe...");
+    const remote = await loadRemoteState();
+    remoteUpdatedAt = remote?.updated_at || null;
+    if (remote?.data && remoteChangedSinceLastSync(remote.updated_at)) {
+      const confirmed = window.confirm(
+        "Auf diesem Gerät und auf dem Server gibt es Änderungen. Sollen die lokalen Änderungen dieses Geräts auf den Server hochgeladen werden? Der aktuelle Serverstand wird zuvor nicht auf dieses Gerät geladen.",
+      );
+      if (!confirmed) {
+        setSyncStatus("Sync abgebrochen – lokale Änderungen bleiben erhalten");
+        return;
+      }
+    }
+
+    await saveRemoteState();
+  } catch (error) {
+    setLastSyncError(error);
+    setSyncStatus(friendlyErrorMessage(error));
+    console.error(error);
+  }
 }
 
 function contrastTrainingDayCount(phase) {
@@ -2852,7 +2891,7 @@ document.querySelector("#registration-toggle").addEventListener("change", async 
   await saveRegistrationSetting(event.target.checked);
 });
 document.querySelector("#auth-action").addEventListener("click", signOut);
-document.querySelector("#sync-now").addEventListener("click", pullRemoteState);
+document.querySelector("#sync-now").addEventListener("click", syncNow);
 
 renderScreen();
 saveState({ markDirty: false });

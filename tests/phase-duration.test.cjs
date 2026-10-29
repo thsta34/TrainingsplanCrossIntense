@@ -19,7 +19,7 @@ function node(selector) {
 }
 const context = vm.createContext({
   console, structuredClone, Intl, Date, setTimeout: () => 0, clearTimeout() {},
-  window: { setTimeout: () => 0, clearTimeout() {}, alert(message) { alerts.push(message); } }, navigator: {},
+  window: { setTimeout: () => 0, clearTimeout() {}, alert(message) { alerts.push(message); }, confirm() { return false; } }, navigator: {},
   document: { querySelector: node, querySelectorAll: () => [], addEventListener() {} },
   localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) },
 });
@@ -138,6 +138,10 @@ assert.equal(empty.phases.length, 0);
 context.remoteFixture = structuredClone(migrated);
 vm.runInContext('state = normalizeAppState(structuredClone(fixture));', context);
 assert.equal(run('shouldProtectLocalState(remoteFixture)'), true);
+assert.equal(run('remoteChangedSinceLastSync("2026-10-21T13:00:00Z")'), true);
+assert.equal(run('remoteChangedSinceLastSync("2026-10-20T11:00:00Z")'), false);
+vm.runInContext('state.lastRemoteSyncedAt = null;', context);
+assert.equal(run('remoteChangedSinceLastSync("2026-10-21T13:00:00Z")'), true);
 const previous = run('serializeState()');
 vm.runInContext('applyRemoteState(remoteFixture)', context);
 assert.deepEqual(JSON.parse(storage.get('training-cycle-state-v3-before-remote-import')).state, previous);

@@ -76,6 +76,11 @@ einen bereits vorhandenen Remote-Stand nicht ueberschreiben.
 In den Settings gibt es den Button `Jetzt syncen`. Er ist nur sichtbar, wenn du
 eingeloggt bist.
 
+Ohne vorgemerkte lokale Aenderungen laedt der Button den aktuellen Serverstand.
+Mit vorgemerkten lokalen Aenderungen laedt er den Stand dieses Geraets hoch.
+Wurde der Server seit dem letzten bekannten Sync ebenfalls geaendert, fragt die
+App vor dem Ersetzen nach. Bei Abbruch bleiben beide Staende unveraendert.
+
 Typische Nutzung:
 
 - Auf Geraet A Training erfassen.
@@ -309,8 +314,9 @@ In `Settings` werden Login, Sync, Phasen und Uebungen verwaltet.
 
 Oben siehst du den aktuellen Sync-Status.
 
-Mit `Jetzt syncen` kannst du Daten manuell von Supabase laden bzw. den Stand
-abgleichen.
+Mit `Jetzt syncen` kannst du Daten manuell von Supabase laden oder vorgemerkte
+lokale Aenderungen hochladen. Bei gleichzeitig neueren Serverdaten ist vor dem
+Hochladen eine ausdrueckliche Bestaetigung erforderlich.
 
 ### Phasen anlegen
 
