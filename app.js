@@ -890,7 +890,20 @@ function defaultContrastSelection() {
   return {
     K1: Array.from({ length: 10 }, (_, index) => blankContrastExercise(index)),
     K2: Array.from({ length: 10 }, (_, index) => blankContrastExercise(index)),
+    K3: Array.from({ length: 10 }, (_, index) => blankContrastExercise(index)),
   };
+}
+
+function contrastTrainingDayCount(phase) {
+  return Number(phase?.contrastTrainingDays) === 3 ? 3 : 2;
+}
+
+function contrastTrainingKeys(phase) {
+  return Array.from({ length: contrastTrainingDayCount(phase) }, (_, index) => `K${index + 1}`);
+}
+
+function contrastTrainingLabel(training) {
+  return `Kontrast ${Number(training.slice(1)) || 1}`;
 }
 
 function normalizeContrastLibrary(library = []) {
@@ -943,18 +956,21 @@ function createTrainingPhase(startDate = defaultSchedule.trainingStartDate, sele
   };
 }
 
-function createContrastPhase(startDate = defaultSchedule.contrastStartDate, contrastSelection = defaultContrastSelection(), existingSessions = [], weeks = 2) {
+function createContrastPhase(startDate = defaultSchedule.contrastStartDate, contrastSelection = defaultContrastSelection(), existingSessions = [], weeks = 2, contrastTrainingDays = 2) {
   weeks = phaseWeeks({ type: "contrast", weeks });
+  contrastTrainingDays = contrastTrainingDayCount({ contrastTrainingDays });
   return {
     id: `phase-contrast-${startDate}`,
     type: "contrast",
     startDate,
     weeks,
+    contrastTrainingDays,
     contrastSelection: {
       K1: normalizeContrastSlots(contrastSelection.K1),
       K2: normalizeContrastSlots(contrastSelection.K2),
+      K3: normalizeContrastSlots(contrastSelection.K3),
     },
-    sessions: createContrastSessions(startDate, existingSessions, weeks),
+    sessions: createContrastSessions(startDate, existingSessions, weeks, contrastTrainingDays),
   };
 }
 
@@ -984,7 +1000,7 @@ function dedupePhases(phases) {
 
 function normalizePhase(phase) {
   if (phase.type === "contrast") {
-    return createContrastPhase(phase.startDate, phase.contrastSelection || defaultContrastSelection(), phase.sessions || [], phaseWeeks(phase));
+    return createContrastPhase(phase.startDate, phase.contrastSelection || defaultContrastSelection(), phase.sessions || [], phaseWeeks(phase), contrastTrainingDayCount(phase));
   }
 
   return createTrainingPhase(phase.startDate, phase.selection || defaultTrainingSelection, phase.sessions || [], phaseWeeks(phase));
@@ -1012,13 +1028,14 @@ function createTrainingSessions(startDate = defaultSchedule.trainingStartDate, e
   });
 }
 
-function createContrastSessions(startDate = defaultSchedule.contrastStartDate, existingSessions = [], weeks = 2) {
-  let k1Count = 0;
-  let k2Count = 0;
+function createContrastSessions(startDate = defaultSchedule.contrastStartDate, existingSessions = [], weeks = 2, contrastTrainingDays = 2) {
+  contrastTrainingDays = contrastTrainingDayCount({ contrastTrainingDays });
+  const occurrenceCounts = {};
 
   return sessionOffsets(weeks).map((offset, index) => {
-    const training = index % 2 === 0 ? "K1" : "K2";
-    const occurrence = training === "K1" ? ++k1Count : ++k2Count;
+    const training = `K${(index % contrastTrainingDays) + 1}`;
+    const occurrence = (occurrenceCounts[training] || 0) + 1;
+    occurrenceCounts[training] = occurrence;
     const existing = existingSessions[index] || {};
 
     return {
@@ -1078,6 +1095,7 @@ function normalizeAppState(rawState) {
   parsed.contrastSelection = parsed.contrastSelection || defaultContrastSelection();
   parsed.contrastSelection.K1 = normalizeContrastSlots(parsed.contrastSelection.K1);
   parsed.contrastSelection.K2 = normalizeContrastSlots(parsed.contrastSelection.K2);
+  parsed.contrastSelection.K3 = normalizeContrastSlots(parsed.contrastSelection.K3);
   parsed.prs = parsed.prs || {};
   parsed.pendingSync = Boolean(parsed.pendingSync);
   parsed.lastLocalChangedAt = parsed.lastLocalChangedAt || null;
@@ -1470,11 +1488,11 @@ function renderSetup() {
     </label>
   `;
   grid.className = "contrast-setup";
-  grid.innerHTML = ["K1", "K2"]
+  grid.innerHTML = contrastTrainingKeys(phase)
     .map(
       (training) => `
         <section class="contrast-column">
-          <h3>${training === "K1" ? "Kontrast 1" : "Kontrast 2"}</h3>
+          <h3>${contrastTrainingLabel(training)}</h3>
           ${phase.contrastSelection[training]
             .map((exercise, index) => renderContrastSetupRow(training, exercise, index))
             .join("")}
@@ -1550,7 +1568,7 @@ function mergeContrastExercisesIntoLibrary(appState = state) {
   appState.phases
     .filter((phase) => phase.type === "contrast")
     .forEach((phase) => {
-      ["K1", "K2"].forEach((training) => {
+      contrastTrainingKeys(phase).forEach((training) => {
         phase.contrastSelection[training].forEach((exercise) => {
           const name = exercise.name.trim();
           if (!name) return;
@@ -1652,7 +1670,7 @@ function renderCalendar() {
           ? occurrence
             ? `Training ${session.training} - ${occurrence}`
             : `Training ${session.training} - geskippt`
-          : `${session.training === "K1" ? "Kontrast 1" : "Kontrast 2"} - ${occurrence}`;
+          : `${contrastTrainingLabel(session.training)} - ${occurrence}`;
 
       return `
         <button
@@ -2297,9 +2315,7 @@ function renderScreen() {
     ? "Kein Training"
     : session.phase === "training"
       ? `Training ${session.training}`
-      : session.training === "K1"
-        ? "Kontrast 1"
-        : "Kontrast 2";
+      : contrastTrainingLabel(session.training);
   document.querySelector("#date-pill").textContent = isNoTrainingWeekday ? formatDate(today) : formatDate(session.date);
   document.querySelector("#session-position").textContent = `Training ${currentIndex + 1} / ${activeSessions().length}`;
   document.querySelector("#session-status").textContent = statusText(session.status);
@@ -2438,7 +2454,7 @@ function updateGlobalContrastExercise(input) {
   state.phases
     .filter((phase) => phase.type === "contrast")
     .forEach((phase) => {
-      ["K1", "K2"].forEach((training) => {
+      contrastTrainingKeys(phase).forEach((training) => {
         phase.contrastSelection[training].forEach((exercise, slot) => {
           if (contrastExerciseKey(exercise.name) !== key) return;
           exercise.name = nextName;
@@ -2529,7 +2545,7 @@ function updatePhaseStart(input) {
   phase.sessions =
     phase.type === "training"
       ? createTrainingSessions(phase.startDate, phase.sessions, phaseWeeks(phase))
-      : createContrastSessions(phase.startDate, phase.sessions, phaseWeeks(phase));
+      : createContrastSessions(phase.startDate, phase.sessions, phaseWeeks(phase), contrastTrainingDayCount(phase));
   selectedPhaseId = phase.id;
   state.phases = dedupePhases(state.phases);
   ensureAllSessionExercises(state);
@@ -2567,7 +2583,7 @@ function updatePhaseWeeks(select) {
   phase.weeks = nextWeeks;
   phase.sessions = phase.type === "training"
     ? createTrainingSessions(phase.startDate, phase.sessions, nextWeeks)
-    : createContrastSessions(phase.startDate, phase.sessions, nextWeeks);
+    : createContrastSessions(phase.startDate, phase.sessions, nextWeeks, contrastTrainingDayCount(phase));
   ensureAllSessionExercises(state);
   currentIndex = Math.max(0, Math.min(currentIndex, phase.sessions.length - 1));
   saveState();
@@ -2585,11 +2601,12 @@ function addPhase() {
   const startDate = document.querySelector("#new-phase-date").value;
   const type = document.querySelector("#new-phase-type").value;
   const weeks = phaseWeeks({ type, weeks: document.querySelector("#new-phase-weeks").value });
+  const contrastTrainingDays = contrastTrainingDayCount({ contrastTrainingDays: document.querySelector("#new-contrast-training-days").value });
   if (!startDate) return;
 
   const phase = type === "training"
     ? createTrainingPhase(startDate, defaultTrainingSelection, [], weeks)
-    : createContrastPhase(startDate, defaultContrastSelection(), [], weeks);
+    : createContrastPhase(startDate, defaultContrastSelection(), [], weeks, contrastTrainingDays);
   const existing = state.phases.find((item) => item.id === phase.id);
   const targetPhase = existing || phase;
   if (existing) {
@@ -2767,6 +2784,7 @@ document.querySelector("#exercise-mode-list").addEventListener("click", (event) 
 document.querySelector("#add-phase").addEventListener("click", addPhase);
 document.querySelector("#new-phase-type").addEventListener("change", (event) => {
   document.querySelector("#new-phase-weeks").value = event.target.value === "training" ? "4" : "2";
+  document.querySelector("#new-contrast-training-days-field").hidden = event.target.value !== "contrast";
 });
 document.querySelector("#reset-app-state").addEventListener("click", resetAppState);
 document.querySelector("#toggle-exercise-modes").addEventListener("click", () => {

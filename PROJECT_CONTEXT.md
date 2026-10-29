@@ -1,10 +1,12 @@
 # Projektkontext: Trainingsplan CrossIntense
 
-Stand: 22.10.2026
+Stand: 29.10.2026
 
-Aktuelle App-/Cache-Version: `v113`
+Aktuelle App-/Cache-Version: `v114`
 
 ## Aenderungsprotokoll
+
+- 29.10.2026: Beim Erstellen einer Kontrastphase kann die Anzahl unterschiedlicher Trainingstage mit 2 oder 3 gewaehlt werden. Zwei Trainingstage rotieren weiterhin als K1/K2; drei Trainingstage werden als K1/K2/K3 auf Montag, Mittwoch und Freitag verteilt. Bestehende Kontrastphasen erhalten bei der Normalisierung explizit den bisherigen Wert 2; vorhandene Sessions, Uebungen und Leistungsdaten bleiben erhalten. App-/Cache-Version auf `v114` erhoeht.
 
 - 22.10.2026: Warnmeldung beim blockierten Verkuerzen einer Phase nennt geskippt, erledigt und noch nicht erledigt erfasste Trainings und fordert dazu auf, die betroffenen Trainings zuerst zu loeschen. App-/Cache-Version auf `v113` erhoeht.
 
@@ -322,7 +324,7 @@ Kontrastphasen dauern standardmaessig 2 Wochen (6 Trainings). Beim Erstellen
 sind auch 3 Wochen (9 Trainings) und 4 Wochen (12 Trainings) moeglich;
 trainiert wird jeweils Montag, Mittwoch und Freitag.
 
-Es gibt Kontrast 1 und Kontrast 2. Pro Kontrasttraining koennen bis zu 10 Uebungen eingetragen werden. Angezeigt werden nur Uebungen, die wirklich ausgefuellt sind.
+Beim Erstellen einer Kontrastphase sind 2 oder 3 unterschiedliche Trainingstage waehlbar. Bei 2 rotieren Kontrast 1 und Kontrast 2, bei 3 rotieren Kontrast 1, Kontrast 2 und Kontrast 3. Pro Kontrasttraining koennen bis zu 10 Uebungen eingetragen werden. Angezeigt werden nur Uebungen, die wirklich ausgefuellt sind. Alte Kontrastphasen ohne gespeicherte Anzahl werden als 2 normalisiert.
 
 Kontrastuebungen werden global verwaltet:
 

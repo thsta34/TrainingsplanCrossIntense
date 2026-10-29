@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=113" />
+  <link rel="stylesheet" href="./styles.css?v=114" />
   </head>
   <body>
     <main class="app">
@@ -243,7 +243,7 @@
           </div>
           <div class="settings-note">
             <strong>Phasenplanung</strong>
-            <span>Wähle den Typ, das Startdatum und die Anzahl Wochen (2, 3 oder 4). Für Training sind 4 Wochen, für Kontrast 2 Wochen vorausgewählt. Die App berechnet daraus automatisch alle Trainingstage.</span>
+            <span>Wähle den Typ, das Startdatum und die Anzahl Wochen (2, 3 oder 4). Bei Kontrast kannst du zusätzlich 2 oder 3 unterschiedliche Trainingstage festlegen. Die App berechnet daraus automatisch alle Trainingstage.</span>
           </div>
           <div class="phase-create">
             <label>
@@ -263,6 +263,13 @@
                 <option value="2">2 Wochen</option>
                 <option value="3">3 Wochen</option>
                 <option value="4" selected>4 Wochen</option>
+              </select>
+            </label>
+            <label id="new-contrast-training-days-field" hidden>
+              <span>Anzahl unterschiedlicher Trainingstage</span>
+              <select id="new-contrast-training-days">
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
               </select>
             </label>
             <button id="add-phase" class="secondary-button" type="button">Phase hinzufügen</button>
@@ -286,11 +293,11 @@
           <button id="reset-app-state" class="danger-button" type="button">App zurücksetzen - ALLE Daten werden gelöscht</button>
         </section>
 
-        <p class="app-version">Version <span id="app-version">v113</span></p>
+        <p class="app-version">Version <span id="app-version">v114</span></p>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app.js?v=113"></script>
+  <script src="./app.js?v=114"></script>
   </body>
 </html>

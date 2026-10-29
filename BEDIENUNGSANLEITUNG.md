@@ -319,7 +319,8 @@ Unter `Phasen` kannst du neue Trainings- oder Kontrastphasen anlegen.
 1. Typ auswaehlen: `Training` oder `Kontrast`.
 2. Startdatum auswaehlen.
 3. Wochen waehlen: 2, 3 oder 4. Beim Typwechsel sind fuer Training 4 und fuer Kontrast 2 Wochen vorausgewaehlt.
-4. Auf `Phase hinzufuegen` klicken.
+4. Bei Kontrast die Anzahl unterschiedlicher Trainingstage waehlen: 2 oder 3. Bei 2 wechseln sich Kontrast 1 und 2 ab; bei 3 rotieren Kontrast 1, 2 und 3 ueber Montag, Mittwoch und Freitag.
+5. Auf `Phase hinzufuegen` klicken.
 
 Die App erstellt automatisch alle Trainingstage der Phase.
 
@@ -332,7 +333,7 @@ Mit Plus kannst du die Details einer Phase aufklappen. Dort kannst du:
 - das Startdatum anpassen
 - die Dauer auf 2, 3 oder 4 Wochen anpassen; die aktuell gespeicherte Dauer ist vorausgewaehlt
 - bei Trainingsphasen die Uebungspaare fuer Training A und B waehlen
-- bei Kontrastphasen die Uebungen fuer Kontrast 1 und Kontrast 2 eintragen
+- bei Kontrastphasen die Uebungen fuer Kontrast 1 und 2 sowie bei drei unterschiedlichen Trainingstagen auch fuer Kontrast 3 eintragen
 
 Beim Verlaengern werden neue Trainingstage angefuegt und bestehende Einheiten
 bleiben erhalten. Eine Verkuerzung wird blockiert, wenn in den wegfallenden

@@ -8,7 +8,8 @@ const storage = new Map();
 const alerts = [];
 function node(selector) {
   if (!nodes.has(selector)) nodes.set(selector, {
-    value: selector === '#new-phase-type' ? 'training' : selector === '#new-phase-weeks' ? '4' : '',
+    value: selector === '#new-phase-type' ? 'training' : selector === '#new-phase-weeks' ? '4' : selector === '#new-contrast-training-days' ? '2' : '',
+    hidden: selector === '#new-contrast-training-days-field',
     dataset: {}, listeners: {}, classList: { toggle() {}, add() {}, remove() {} },
     addEventListener(event, listener) { this.listeners[event] = listener; },
     setAttribute() {},
@@ -29,6 +30,7 @@ for (const type of ['training', 'contrast']) {
   node('#new-phase-type').value = type;
   node('#new-phase-type').listeners.change({ target: node('#new-phase-type') });
   assert.equal(node('#new-phase-weeks').value, type === 'training' ? '4' : '2');
+  assert.equal(node('#new-contrast-training-days-field').hidden, type !== 'contrast');
   for (const [weeks, end] of [[2, '2026-11-06'], [3, '2026-11-13'], [4, '2026-11-20']]) {
     node('#new-phase-date').value = '2026-10-26';
     node('#new-phase-weeks').value = String(weeks);
@@ -50,6 +52,15 @@ for (const type of ['training', 'contrast']) {
     assert.equal(run('state.phases[0].sessions[0].date'), '2026-11-02');
   }
 }
+node('#new-phase-type').value = 'contrast';
+node('#new-phase-date').value = '2026-10-26';
+node('#new-phase-weeks').value = '2';
+node('#new-contrast-training-days').value = '3';
+vm.runInContext('state = createInitialState(); addPhase();', context);
+assert.equal(run('state.phases[0].contrastTrainingDays'), 3);
+assert.deepEqual(run('state.phases[0].sessions.map(session => session.training)'), ['K1', 'K2', 'K3', 'K1', 'K2', 'K3']);
+assert.deepEqual(run('state.phases[0].sessions.map(session => session.occurrence)'), [1, 1, 1, 2, 2, 2]);
+assert.equal(run('state.phases[0].contrastSelection.K3.length'), 10);
 assert.deepEqual(run(`['training', 'contrast'].map(type => {
   const phase = type === 'training' ? createTrainingPhase() : createContrastPhase();
   delete phase.weeks;
@@ -93,6 +104,7 @@ const before = run(`(() => {
   saved.contrastLibrary = [{ name: 'Trizeps Test', mode: 'dumbbell', bar: 0 }];
   saved.phases.forEach(phase => {
     delete phase.weeks;
+    if (phase.type === 'contrast') delete phase.contrastTrainingDays;
     phase.sessions.forEach((session, index) => {
       session.status = ['done', 'skipped', 'planned'][index % 3];
       session.notes = 'Notiz ' + index;
@@ -108,6 +120,7 @@ context.fixture = structuredClone(before);
 const migrated = run('normalizeAppState(structuredClone(fixture))');
 for (let i = 0; i < before.phases.length; i++) {
   assert.equal(migrated.phases[i].weeks, i === 0 ? 4 : 2);
+  if (migrated.phases[i].type === 'contrast') assert.equal(migrated.phases[i].contrastTrainingDays, 2);
   assert.equal(migrated.phases[i].sessions.length, before.phases[i].sessions.length);
   for (let j = 0; j < before.phases[i].sessions.length; j++) {
     const original = before.phases[i].sessions[j];
