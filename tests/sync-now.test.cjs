@@ -28,7 +28,7 @@ async function run(script) {
 
 (async () => {
   await run(`
-    syncUser = { id: 'test' };
+    activateUser({ id: 'test' });
     state = createInitialState();
     state.phases = [createContrastPhase('2026-10-26')];
     pullCount = 0;

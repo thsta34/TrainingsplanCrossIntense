@@ -24,7 +24,7 @@ const context = vm.createContext({
   localStorage: { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) },
 });
 vm.runInContext(source.slice(0, source.lastIndexOf('\nrenderScreen();')), context);
-vm.runInContext('renderScreen = () => {}; renderSetup = () => {}; syncUser = { id: "test" }; state = createInitialState();', context);
+vm.runInContext('renderScreen = () => {}; renderSetup = () => {}; activateUser({ id: "test" }); state = createInitialState();', context);
 const run = script => JSON.parse(JSON.stringify(vm.runInContext(script, context)));
 for (const type of ['training', 'contrast']) {
   node('#new-phase-type').value = type;
@@ -40,7 +40,7 @@ for (const type of ['training', 'contrast']) {
     assert.equal(phase.sessions.length, weeks * 3);
     assert.equal(phase.sessions.at(-1).date, end);
     assert.ok(phase.sessions.every(item => [1, 3, 5].includes(new Date(item.date + 'T12:00:00').getDay())));
-    vm.runInContext('state.phases[0].sessions[0].status = "done"; state.phases[0].sessions[0].notes = "keep"; state.phases[0].sessions[0].exercises.TEST = { sets: [3, 4, 5] }; saveState(); state = normalizeAppState(JSON.parse(localStorage.getItem(storageKey)));', context);
+    vm.runInContext('state.phases[0].sessions[0].status = "done"; state.phases[0].sessions[0].notes = "keep"; state.phases[0].sessions[0].exercises.TEST = { sets: [3, 4, 5] }; saveState(); state = normalizeAppState(JSON.parse(localStorage.getItem(userStorageKey())));', context);
     assert.equal(run('state.phases[0].weeks'), weeks);
     assert.equal(run('state.phases[0].sessions.length'), weeks * 3);
     assert.equal(run('state.phases[0].sessions[0].status'), 'done');
@@ -144,7 +144,7 @@ vm.runInContext('state.lastRemoteSyncedAt = null;', context);
 assert.equal(run('remoteChangedSinceLastSync("2026-10-21T13:00:00Z")'), true);
 const previous = run('serializeState()');
 vm.runInContext('applyRemoteState(remoteFixture)', context);
-assert.deepEqual(JSON.parse(storage.get('training-cycle-state-v3-before-remote-import')).state, previous);
+assert.deepEqual(JSON.parse(storage.get('training-cycle-state-v3-before-remote-import:user:test')).state, previous);
 assert.deepEqual(run('state.phases'), migrated.phases);
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 assert.equal(html.includes('new-phase-end'), false);

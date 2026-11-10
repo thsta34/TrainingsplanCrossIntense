@@ -1,10 +1,100 @@
 # Projektkontext: Trainingsplan CrossIntense
 
-Stand: 29.10.2026
+Stand: 10.11.2026
 
-Aktuelle App-/Cache-Version: `v115`
+Aktuelle App-/Cache-Version: `v118` (Passwort-Reset und Benutzertrennung)
 
 ## Aenderungsprotokoll
+
+- 10.11.2026: Nutzer hat die lokale Benutzertrennung nach gezielter Testuser-Bereinigung bestaetigt: Testuser bleibt leer, Originalkonto behaelt seine Trainings. Veroeffentlichung von v118 anschliessend ausdruecklich freigegeben. Alle vier Node-Tests und Syntaxpruefungen bestanden. Echter Passwort-Reset per E-Mail bleibt wegen des Supabase-Versandlimits bis zum naechsten Nutzertest offen; Auth-/UI-Ablauf wurde bisher simuliert geprueft. Kein automatisches Loeschen produktiver Daten und keine Schemaaenderung beim Deployment.
+
+- 10.11.2026: Kritischen lokalen Kontowechsel-Fehler als `v118` behoben. Der bisherige gemeinsame Browser-State konnte nach Login/E-Mail-Bestaetigung unter einem anderen Konto angezeigt und bei fehlendem Serverstand hochgeladen werden. Ab jetzt nur leeren State vor Auth laden; authentifizierte States und Importsicherungen werden pro User-ID gespeichert, mit `ownerUserId` markiert und bei Kontowechsel vor jeder Anzeige getrennt aktiviert. Alte globale Storage-Keys bleiben unveraendert erhalten; unzugeordnete Daten werden zusaetzlich roh unter `training-cycle-state-v3:unassigned-backup` gesichert und niemals automatisch einem neuen Login zugeteilt. Login ohne eigenen Serverstand startet leer und schreibt ohne echte lokale Aenderung nichts hoch. Epoch-Pruefungen blockieren veraltete Antworten/Queue-Jobs und einen falschen Insert nach Kontowechsel; Formular-Ereignisse sind an Benutzer und Session gebunden. Gemeinsamen Phaseneditor vor DOM-Neuaufbau erhalten, damit Konto mit/ohne Phasen sicher wechseln kann. Bestaetigungs-E-Mail verwendet `emailRedirectTo` auf die gerade verwendete App-Adresse. Keine echten Userdaten/Serverdaten bereinigt oder geloescht.
+
+## Vorfall Benutzertrennung (Lokaltest 10.11.2026)
+
+Der Nutzer sah nach Bestaetigung von `testuser1@odin34.ch` den Plan seines
+urspruenglichen Kontos. Betroffen war die lokale App unter `127.0.0.1:4173`.
+Die Ursache war der gemeinsame Browser-Key, nicht ein nachgewiesener RLS-Bypass.
+Die alte Logik konnte diesen Plan als Kopie unter dem neuen Konto hochladen.
+Der Nutzer hat den Testuser anschliessend selbst gezielt in Supabase und im
+lokalen Cache bereinigt und bestaetigt, dass Testuser leer und Originalkonto
+unveraendert sind. Direkter Supabase-Zugriff durch Codex erfolgte nicht.
+Keine automatische Bereinigung des Testkontos durchfuehren; erst dessen
+Serverstand sichern und mit dem Nutzer eindeutig zuordnen. Keine User loeschen,
+keine Trainings zuruecksetzen und keine Browserdaten loeschen, solange lokale
+Altdaten eventuell noch benoetigt werden.
+
+Neue lokale Keys:
+
+- State: `training-cycle-state-v3:user:<user-id>`
+- Importsicherung: `training-cycle-state-v3-before-remote-import:user:<user-id>`
+- Unzugeordnete Rohsicherung: `training-cycle-state-v3:unassigned-backup`
+
+Die bisherigen Keys `training-cycle-state-v3`, `training-block-10-state-v2`
+und die alte Importsicherung werden nicht entfernt. Bereits synchronisierte
+Altdaten werden ausschliesslich aus der Serverzeile der angemeldeten User-ID
+geladen; aus einem nicht zugeordneten lokalen State erfolgt kein Auto-Import.
+Nur lokal vorhandene Altdaten erfordern bei Bedarf eine ausdrueckliche,
+gepruefte Wiederherstellung in das richtige Konto. Bei Rollback auf v115/v117
+waere der Kontowechsel-Fehler wieder vorhanden; nicht blind zurueckrollen.
+
+Geprueft mit `node tests/account-isolation.test.cjs` und einem echten
+Browserablauf mit simulierter Auth/DB: A -> B -> Logout -> A, unsynchronisierte
+Eingaben, Uebungslisten, Legacy-Rohsicherung, langsame Serverantworten und
+verzoegerte Saves. Kein echter Account wurde dabei geaendert.
+Vor erneutem Nutzertest alte lokale App-Tabs schliessen und v118 hart neu laden.
+Fuer lokale Registrierungsbestaetigungen zusaetzlich die Redirect URL
+`http://127.0.0.1:4173/` in Supabase erlauben; produktive Site URL nicht ersetzen.
+
+- 10.11.2026: Registrierungsfix lokal als `v117`: `signUp` setzt `syncUser` nur bei einer echten `data.session.user`. Eine User-Antwort ohne Sitzung (E-Mail-Bestaetigung ausstehend) darf Login-Anzeige, Dateneingabe und Sync nicht freischalten. Veraltete Sync-Fehler werden nach erfolgreicher Registrierung geloescht. Keine Aenderung der RLS-Policies; bestehende User-IDs und Trainingsdaten bleiben erhalten.
+
+- 10.11.2026: Passwort-Reset lokal als `v116` implementiert, noch nicht deployed. `Passwort vergessen?` fordert per `auth.resetPasswordForEmail` eine E-Mail an. Linkziel ist der aktuelle App-Pfad mit `?password-reset=1`. Recovery-Ereignis wird vor dem initialen Session-Laden abonniert; Recovery-Modus sperrt lokale State-Speicherung und alle Trainings-Sync-Einstiegspunkte. Passwortaenderung nutzt ausschliesslich `auth.updateUser({ password })` nach `getUser`-Pruefung derselben User-ID. Kein Sign-up, kein App-Reset, keine Schemaaenderung. Nach Erfolg bleibt Sync bis zum expliziten Klick auf `Zum Training` gesperrt; danach sauberer Seitenneustart. Neue Tests unter `tests/password-recovery.test.cjs`; Browserablauf mit gemockter Auth auf Desktop/Mobil geprueft, keine echten E-Mails verschickt oder Konten geaendert.
+
+## Lokaler Passwort-Reset-Test
+
+Vor einem echten E-Mail-Test in Supabase unter Authentication > URL Configuration
+die zusaetzliche Redirect URL eintragen:
+
+```text
+http://127.0.0.1:4173/?password-reset=1
+```
+
+Die produktive Site URL nicht ersetzen. Ist die lokale URL nicht freigegeben,
+kann Supabase auf die produktive Site URL zurueckfallen, wo `v115` noch keinen
+Passwort-Reset-Bildschirm hat. Daher zuerst die Redirect-Freigabe kontrollieren.
+Das Reset-E-Mail-Template muss den normalen Supabase-Bestaetigungslink
+(`{{ .ConfirmationURL }}`) verwenden und darf nicht fest auf die Site URL zeigen.
+
+Am besten ein separates Testkonto und ein privates Browserfenster verwenden:
+lokale App oeffnen, Settings, E-Mail eintragen, `Passwort vergessen?`.
+Link auf diesem PC oeffnen (127.0.0.1 zeigt immer auf das oeffnende Geraet),
+neues Passwort zweimal eingeben, speichern, `Zum Training`.
+User-ID und Trainingsdaten vor/nach dem echten Reset vergleichen. Bei einem
+abgelaufenen Link kann im Reset-Bildschirm eine neue E-Mail angefordert werden.
+Ein Reload im laufenden Reset nutzt nur einen tablokalen Recovery-Marker;
+Passwoerter werden weder lokal gespeichert noch protokolliert.
+
+Lokale Pruefungen:
+
+```powershell
+node tests/password-recovery.test.cjs
+node tests/phase-duration.test.cjs
+node tests/sync-now.test.cjs
+```
+
+Supabase-Referenz: https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail
+
+Fuer den produktiven Passwort-Reset zusaetzlich als Redirect URL freigeben:
+
+```text
+https://thsta34.github.io/TrainingsplanCrossIntense/?password-reset=1
+```
+
+Vor dem naechsten echten E-Mail-Test Redirect-Freigabe kontrollieren und
+moeglichst ein Testkonto verwenden. Die lokale und produktive App verwenden
+dasselbe Supabase-Projekt; ein echter Reset aendert das Passwort fuer beide.
+Offen: E-Mail empfangen, Link oeffnen, Passwort setzen, mit neuem Passwort
+einloggen sowie User-ID und Trainingsdaten vorher/nachher vergleichen.
 
 - 29.10.2026: Manuellen Sync korrigiert: `Jetzt syncen` laedt ohne lokale Aenderungen weiterhin den Serverstand, laedt bei vorgemerkten lokalen Aenderungen nun aber den lokalen Stand hoch und loest damit den bisherigen dauerhaften Schutzstatus auf. Wurde der Server seit dem letzten bekannten Sync ebenfalls geaendert, muss das Ersetzen des Serverstands ausdruecklich bestaetigt werden; bei Abbruch bleiben lokale und entfernte Daten unveraendert. App-/Cache-Version auf `v115` erhoeht.
 

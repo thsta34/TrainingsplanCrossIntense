@@ -1,7 +1,7 @@
 # Bedienungsanleitung: Trainingsplan CrossIntense
 
 Stand: 22.10.2026
-App-Version: v110
+App-Version: v118
 
 ## 1. Zweck der App
 
@@ -64,6 +64,19 @@ Trainingsdaten nur lokal auf einem einzelnen Geraet gespeichert werden.
 
 Nach erfolgreichem Login wechselt die App automatisch in den Bereich
 `Training`.
+
+### Passwort vergessen
+
+In Settings bei der Anmeldung die E-Mail-Adresse eintragen und auf
+`Passwort vergessen?` klicken. Den Link aus der E-Mail oeffnen, das neue
+Passwort zweimal eintragen und speichern. Danach mit `Zum Training`
+zur App zurueckkehren. Die User-ID und die Zuordnung der Trainings bleiben
+erhalten. Waehrend des Passwort-Resets werden keine Trainingsdaten gespeichert
+oder synchronisiert. Ungueltige/abgelaufene Links koennen neu angefordert werden.
+
+Der lokale E-Mail-Test setzt eine in Supabase erlaubte lokale Redirect URL
+voraus (siehe `PROJECT_CONTEXT.md`). Fuer die Online-App muss entsprechend
+die produktive Reset-Adresse in Supabase freigegeben sein.
 
 ### Synchronisation
 

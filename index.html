@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="stylesheet" href="./styles.css?v=115" />
+  <link rel="stylesheet" href="./styles.css?v=118" />
   </head>
   <body>
     <main class="app">
@@ -31,6 +31,33 @@
         <button class="app-tab" type="button" data-view="handbook">Handbuch</button>
         <button class="app-tab" type="button" data-view="settings">Settings</button>
       </nav>
+
+      <section id="password-recovery-view" class="sync-card recovery-card" hidden>
+        <h2>Neues Passwort</h2>
+        <p id="recovery-status" role="status" aria-live="polite"></p>
+        <form id="recovery-password-form">
+          <div id="recovery-password-fields" class="auth-grid" hidden>
+            <label>
+              <span>Neues Passwort</span>
+              <input id="recovery-password" type="password" autocomplete="new-password" minlength="6" required />
+            </label>
+            <label>
+              <span>Passwort bestätigen</span>
+              <input id="recovery-password-confirm" type="password" autocomplete="new-password" minlength="6" required />
+            </label>
+            <button id="recovery-save" class="secondary-button" type="submit">Passwort speichern</button>
+          </div>
+        </form>
+        <div id="recovery-request-fields" class="auth-grid" hidden>
+          <label>
+            <span>E-Mail</span>
+            <input id="recovery-email" type="email" autocomplete="email" placeholder="name@example.com" />
+          </label>
+          <button id="recovery-resend" class="secondary-button" type="button">Neuen Link anfordern</button>
+          <p id="recovery-request-status" class="auth-reset-status" role="status" aria-live="polite"></p>
+        </div>
+        <button id="recovery-finish" class="secondary-button" type="button" hidden>Zum Training</button>
+      </section>
 
       <section id="training-view" class="app-view">
         <section id="login-required" class="empty-state gate-card" hidden>
@@ -224,6 +251,10 @@
             <button id="sign-in" class="secondary-button" type="button">Einloggen</button>
             <button id="sign-up" class="secondary-button" type="button">Registrieren</button>
           </div>
+          <div id="password-reset-request">
+            <button id="forgot-password" class="auth-text-button" type="button">Passwort vergessen?</button>
+            <p id="password-reset-status" class="auth-reset-status" role="status" aria-live="polite"></p>
+          </div>
           <label id="registration-toggle-row" class="settings-toggle">
             <input id="registration-toggle" type="checkbox" />
             <span>Registrierung anzeigen</span>
@@ -293,11 +324,11 @@
           <button id="reset-app-state" class="danger-button" type="button">App zurücksetzen - ALLE Daten werden gelöscht</button>
         </section>
 
-        <p class="app-version">Version <span id="app-version">v115</span></p>
+        <p class="app-version">Version <span id="app-version">v118</span></p>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="./app.js?v=115"></script>
+  <script src="./app.js?v=118"></script>
   </body>
 </html>

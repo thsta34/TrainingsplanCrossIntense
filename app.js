@@ -46,9 +46,19 @@ const registrationSettingKey = "registration_enabled";
 const registrationAdminEmail = "thstaehli@gmail.com";
 const supabaseUrl = "https://tnhwyrapdsqoklenzwjn.supabase.co";
 const supabaseKey = "sb_publishable_l6CdhfG_yUH1Nb9JsjhrkA_8HbDKRYX";
+const recoveryStorageKey = "training-password-recovery";
+const recoveryState = readPasswordRecoveryState();
+let passwordRecoveryActive = recoveryState.active;
+let recoveryUserId = recoveryState.userId;
+let recoveryError = recoveryState.error;
+let recoveryComplete = false;
+let recoverySubmitting = false;
 const supabaseClient = window.supabase?.createClient(supabaseUrl, supabaseKey);
 const formatter = new Intl.NumberFormat("de-CH", { maximumFractionDigits: 2 });
 let syncUser = null;
+let activeStateUserId = null;
+let accountEpoch = 0;
+let accountStorageReady = false;
 let syncTimer = null;
 let remoteSaveChain = Promise.resolve();
 let isApplyingRemoteState = false;
@@ -452,6 +462,7 @@ function renderAuth() {
   const signedIn = Boolean(syncUser);
   const canManageRegistration = signedIn && syncUser?.email === registrationAdminEmail;
   document.querySelector("#auth-fields").hidden = signedIn;
+  document.querySelector("#password-reset-request").hidden = signedIn;
   document.querySelector("#session-fields").hidden = !signedIn;
   document.querySelector("#session-email").textContent = syncUser?.email || "";
   document.querySelector("#sign-up").hidden = !registrationEnabled;
@@ -538,8 +549,8 @@ async function saveRegistrationSetting(enabled) {
 }
 
 function renderGate() {
-  const locked = !syncUser;
-  const hasPlan = Boolean(syncUser && state.phases.length);
+  const locked = !hasBoundUserState();
+  const hasPlan = Boolean(!locked && state.phases.length);
   document.querySelector("#login-required").hidden = !locked;
   document.querySelector("#empty-plan").hidden = locked || hasPlan;
   document.querySelectorAll(".training-only").forEach((element) => {
@@ -553,6 +564,67 @@ function renderGate() {
 
 function serializeState() {
   return JSON.parse(JSON.stringify(state));
+}
+
+function userStorageKey(userId = activeStateUserId) {
+  return `${storageKey}:user:${userId}`;
+}
+
+function hasBoundUserState(userId = syncUser?.id, epoch = accountEpoch) {
+  return Boolean(userId && syncUser?.id === userId && activeStateUserId === userId && accountStorageReady
+    && (!state.ownerUserId || state.ownerUserId === userId) && epoch === accountEpoch);
+}
+
+function activateUser(user) {
+  const nextId = user?.id || null;
+  if (nextId === activeStateUserId) {
+    syncUser = user;
+    return false;
+  }
+  // Preserve the previous account before replacing any in-memory data.
+  if (activeStateUserId && accountStorageReady && !passwordRecoveryActive) {
+    localStorage.setItem(userStorageKey(), JSON.stringify(state));
+  }
+  window.clearTimeout(syncTimer);
+  accountEpoch += 1;
+  remoteUpdatedAt = null;
+  settingsPhaseOpen = false;
+  activeStateUserId = nextId;
+  syncUser = user;
+  accountStorageReady = false;
+  state = createInitialState();
+  selectedPhaseId = null;
+  currentIndex = 0;
+  currentPhase = "training";
+  if (nextId) {
+    try {
+      const saved = localStorage.getItem(userStorageKey());
+      const legacy = localStorage.getItem(storageKey);
+      // Unowned legacy data cannot safely be assigned to the next login.
+      if (legacy && !localStorage.getItem(`${storageKey}:unassigned-backup`)) {
+        localStorage.setItem(`${storageKey}:unassigned-backup`, legacy);
+      }
+      let ownedLegacy = null;
+      if (!saved && legacy) {
+        try { if (JSON.parse(legacy).ownerUserId === nextId) ownedLegacy = legacy; } catch (_) {}
+      }
+      if (saved || ownedLegacy) {
+        const parsed = JSON.parse(saved || ownedLegacy);
+        if (parsed.ownerUserId && parsed.ownerUserId !== nextId) throw new Error("Lokale Daten gehören zu einem anderen Benutzer.");
+        state = normalizeAppState(parsed);
+      }
+      state.ownerUserId = nextId;
+      accountStorageReady = true;
+      const position = findInitialPosition();
+      selectedPhaseId = position.phaseId;
+      currentPhase = position.phase;
+      currentIndex = position.index;
+    } catch (error) {
+      setSyncStatus("Lokale Daten konnten nicht sicher zugeordnet werden. Es wird nichts überschrieben.");
+      console.error(error);
+    }
+  }
+  return true;
 }
 
 function hasPendingLocalChanges() {
@@ -573,26 +645,34 @@ function remoteChangedSinceLastSync(updatedAt) {
 }
 
 function applyRemoteState(remoteState) {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState()) return;
   if (!remoteState) return;
+  if (remoteState.ownerUserId && remoteState.ownerUserId !== activeStateUserId) {
+    throw new Error("Der geladene Plan gehört zu einem anderen Benutzer. Er wurde nicht übernommen.");
+  }
   isApplyingRemoteState = true;
-  localStorage.setItem(remoteImportBackupKey, JSON.stringify({
+  localStorage.setItem(`${remoteImportBackupKey}:user:${activeStateUserId}`, JSON.stringify({
     savedAt: new Date().toISOString(),
     state: serializeState(),
   }));
   state = normalizeAppState(remoteState);
+  state.ownerUserId = activeStateUserId;
   state.pendingSync = false;
   state.lastRemoteSyncedAt = remoteUpdatedAt || new Date().toISOString();
-  localStorage.setItem(storageKey, JSON.stringify(state));
+  localStorage.setItem(userStorageKey(), JSON.stringify(state));
   const position = findInitialPosition();
   currentPhase = position.phase;
   selectedPhaseId = position.phaseId || state.selectedPhaseId || state.phases[0]?.id || null;
   currentIndex = position.index;
   renderScreen();
-  localStorage.setItem(storageKey, JSON.stringify(state));
+  localStorage.setItem(userStorageKey(), JSON.stringify(state));
   isApplyingRemoteState = false;
 }
 
 async function loadRemoteState() {
+  if (passwordRecoveryActive) return null;
+  if (!hasBoundUserState()) return null;
   if (!supabaseClient || !syncUser) return null;
   const { data, error } = await withTimeout(
     supabaseClient
@@ -610,9 +690,12 @@ async function loadRemoteState() {
   return data;
 }
 
-async function writeRemoteStateData(nextState, updatedAt = new Date().toISOString()) {
+async function writeRemoteStateData(nextState, updatedAt = new Date().toISOString(), userId = syncUser?.id, epoch = accountEpoch) {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState(userId, epoch)) throw new Error("Der Benutzer hat gewechselt. Der Speichervorgang wurde abgebrochen.");
+  if (nextState.ownerUserId && nextState.ownerUserId !== userId) throw new Error("Der Plan gehört zu einem anderen Benutzer und wird nicht gespeichert.");
   const payload = {
-    data: JSON.parse(JSON.stringify(nextState)),
+    data: { ...JSON.parse(JSON.stringify(nextState)), ownerUserId: userId },
     updated_at: updatedAt,
   };
 
@@ -620,11 +703,13 @@ async function writeRemoteStateData(nextState, updatedAt = new Date().toISOStrin
     supabaseClient
       .from("training_app_states")
       .update(payload)
-      .eq("user_id", syncUser.id)
+      .eq("user_id", userId)
       .select("user_id")
       .maybeSingle(),
     10000,
   );
+
+  if (!hasBoundUserState(userId, epoch)) return;
 
   if (updateResult.error) {
     throw updateResult.error;
@@ -636,11 +721,13 @@ async function writeRemoteStateData(nextState, updatedAt = new Date().toISOStrin
 
   const insertResult = await withTimeout(
     supabaseClient.from("training_app_states").insert({
-      user_id: syncUser.id,
+      user_id: userId,
       ...payload,
     }),
     10000,
   );
+
+  if (!hasBoundUserState(userId, epoch)) return;
 
   if (!insertResult.error) {
     return;
@@ -654,7 +741,7 @@ async function writeRemoteStateData(nextState, updatedAt = new Date().toISOStrin
     supabaseClient
       .from("training_app_states")
       .update(payload)
-      .eq("user_id", syncUser.id),
+      .eq("user_id", userId),
     10000,
   );
 
@@ -664,6 +751,10 @@ async function writeRemoteStateData(nextState, updatedAt = new Date().toISOStrin
 }
 
 async function persistRemoteState() {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState() || !hasPendingLocalChanges()) return;
+  const userId = activeStateUserId;
+  const epoch = accountEpoch;
   if (!supabaseClient || !syncUser || isApplyingRemoteState || isInitialAuthLoading) return;
   setSyncStatus("Speichere...");
   const updatedAt = new Date().toISOString();
@@ -672,14 +763,16 @@ async function persistRemoteState() {
   nextState.pendingSync = false;
   nextState.lastRemoteSyncedAt = updatedAt;
   try {
-    await writeRemoteStateData(nextState, updatedAt);
+    await writeRemoteStateData(nextState, updatedAt, userId, epoch);
   } catch (error) {
+    if (!hasBoundUserState(userId, epoch)) return;
     setLastSyncError(error);
     setSyncStatus(friendlyErrorMessage(error));
     console.error(error);
     return;
   }
 
+  if (!hasBoundUserState(userId, epoch)) return;
   remoteUpdatedAt = updatedAt;
   if ((state.lastLocalChangedAt || null) !== savedLocalChangedAt) {
     setSyncStatus("Neuere Änderung vorgemerkt");
@@ -688,21 +781,29 @@ async function persistRemoteState() {
 
   state.pendingSync = false;
   state.lastRemoteSyncedAt = updatedAt;
-  localStorage.setItem(storageKey, JSON.stringify(state));
+  localStorage.setItem(userStorageKey(), JSON.stringify(state));
   setLastSyncError(null);
   setSyncStatus("Synchronisiert");
 }
 
 function saveRemoteState() {
+  if (passwordRecoveryActive) return Promise.resolve();
+  if (!hasBoundUserState()) return Promise.resolve();
   if (!supabaseClient || !syncUser || isApplyingRemoteState || isInitialAuthLoading) {
     return Promise.resolve();
   }
 
-  remoteSaveChain = remoteSaveChain.then(persistRemoteState, persistRemoteState);
+  const epoch = accountEpoch;
+  const persist = () => epoch === accountEpoch ? persistRemoteState() : undefined;
+  remoteSaveChain = remoteSaveChain.then(persist, persist);
   return remoteSaveChain;
 }
 
 async function overwriteRemoteState(nextState) {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState()) return;
+  const userId = activeStateUserId;
+  const epoch = accountEpoch;
   if (!supabaseClient || !syncUser || isInitialAuthLoading) return;
   setSyncStatus("Speichere...");
   const updatedAt = new Date().toISOString();
@@ -710,19 +811,23 @@ async function overwriteRemoteState(nextState) {
   payloadState.pendingSync = false;
   payloadState.lastRemoteSyncedAt = updatedAt;
   try {
-    await writeRemoteStateData(payloadState, updatedAt);
+    await writeRemoteStateData(payloadState, updatedAt, userId, epoch);
   } catch (error) {
+    if (!hasBoundUserState(userId, epoch)) return;
     setLastSyncError(error);
     setSyncStatus(friendlyErrorMessage(error));
     console.error(error);
     return;
   }
+  if (!hasBoundUserState(userId, epoch)) return;
   remoteUpdatedAt = updatedAt;
   setLastSyncError(null);
   setSyncStatus("Synchronisiert");
 }
 
 function queueRemoteSave() {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState()) return;
   if (!syncUser || isApplyingRemoteState || isInitialAuthLoading) return;
   setSyncStatus("Änderung vorgemerkt");
   window.clearTimeout(syncTimer);
@@ -730,10 +835,15 @@ function queueRemoteSave() {
 }
 
 async function syncAfterSignIn() {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState()) return;
+  const userId = activeStateUserId;
+  const epoch = accountEpoch;
   if (!syncUser) return;
   try {
     setSyncStatus("Lade...");
     const remote = await loadRemoteState();
+    if (!hasBoundUserState(userId, epoch)) return;
     if (remote?.data && Object.keys(remote.data).length) {
       remoteUpdatedAt = remote.updated_at || null;
       if (shouldProtectLocalState(remote.data, remote.updated_at)) {
@@ -745,7 +855,8 @@ async function syncAfterSignIn() {
       return;
     }
 
-    await saveRemoteState();
+    if (hasPendingLocalChanges()) await saveRemoteState();
+    else setSyncStatus("Noch keine Trainings gespeichert");
   } catch (error) {
     setSyncStatus(friendlyErrorMessage(error));
     console.error(error);
@@ -753,6 +864,10 @@ async function syncAfterSignIn() {
 }
 
 async function pullRemoteState() {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState()) return;
+  const userId = activeStateUserId;
+  const epoch = accountEpoch;
   if (!supabaseClient || !syncUser) {
     setSyncStatus("Nicht verbunden");
     return;
@@ -761,6 +876,7 @@ async function pullRemoteState() {
   try {
     setSyncStatus("Lade...");
     const remote = await loadRemoteState();
+    if (!hasBoundUserState(userId, epoch)) return;
     if (remote?.data && Object.keys(remote.data).length) {
       remoteUpdatedAt = remote.updated_at || null;
       if (shouldProtectLocalState(remote.data, remote.updated_at)) {
@@ -788,7 +904,169 @@ async function pullRemoteState() {
   }
 }
 
+function readPasswordRecoveryState() {
+  const inactive = { active: false, userId: null, error: "" };
+  if (!window.location) return inactive;
+  const url = new URL(window.location.href);
+  const hash = new URLSearchParams(url.hash.slice(1));
+  const incoming = hash.get("type") === "recovery" || url.searchParams.get("password-reset") === "1";
+  const invalid = Boolean(hash.get("error") || url.searchParams.get("error"));
+  if (invalid) {
+    return { active: true, userId: null, error: "Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an." };
+  }
+  let stored = null;
+  try {
+    stored = JSON.parse(window.sessionStorage?.getItem(recoveryStorageKey) || "null");
+  } catch (_) {
+    // The URL still identifies incoming recovery links when session storage is unavailable.
+  }
+  return { active: incoming || Boolean(stored?.userId), userId: hash.get("type") === "recovery" ? null : stored?.userId || null, error: "" };
+}
+
+function passwordRecoveryRedirectUrl() {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.search = "";
+  url.searchParams.set("password-reset", "1");
+  return url.href;
+}
+
+function renderPasswordRecovery() {
+  document.querySelectorAll(".app-view").forEach((view) => { view.hidden = true; });
+  document.querySelector(".app-tabs").hidden = true;
+  document.querySelector("#password-recovery-view").hidden = false;
+  document.querySelector("#block-label").textContent = "";
+  document.querySelector("#training-title").textContent = "Passwort zurücksetzen";
+  document.querySelector("#date-pill").textContent = "";
+  document.querySelector("#date-pill").hidden = true;
+  const ready = Boolean(recoveryUserId && syncUser?.id === recoveryUserId && !recoveryError);
+  document.querySelector("#recovery-password-fields").hidden = recoveryComplete || !ready;
+  document.querySelector("#recovery-request-fields").hidden = recoveryComplete || ready;
+  document.querySelector("#recovery-finish").hidden = !recoveryComplete;
+  document.querySelector("#recovery-save").disabled = recoverySubmitting || !ready;
+  document.querySelector("#recovery-status").textContent = recoveryComplete
+    ? "Dein Passwort wurde geändert. Deine Trainingsdaten bleiben erhalten."
+    : recoveryError || (ready ? "Gib dein neues Passwort zweimal ein." : "Bitte öffne einen gültigen Link aus der E-Mail oder fordere einen neuen an.");
+}
+
+function handleAuthStateChange(event, session) {
+  const user = session?.user || null;
+  if (event === "PASSWORD_RECOVERY") {
+    passwordRecoveryActive = true;
+    recoveryComplete = false;
+    recoveryUserId = session?.user?.id || null;
+    recoveryError = recoveryUserId ? "" : "Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.";
+    window.clearTimeout(syncTimer);
+    try {
+      window.sessionStorage?.setItem(recoveryStorageKey, JSON.stringify({ userId: recoveryUserId }));
+    } catch (_) {}
+  }
+  if (passwordRecoveryActive) {
+    syncUser = user;
+    if (!syncUser || (recoveryUserId && syncUser.id !== recoveryUserId)) {
+      recoveryUserId = null;
+      recoveryError = "Die Sitzung ist abgelaufen. Bitte fordere einen neuen Link an.";
+    }
+    renderPasswordRecovery();
+    return;
+  }
+  const changed = activateUser(user);
+  renderAuth();
+  if (changed) renderScreen();
+  // Supabase auth callbacks must return before further SDK requests are made.
+  const epoch = accountEpoch;
+  window.setTimeout(() => {
+    if (epoch !== accountEpoch) return;
+    loadRegistrationSetting();
+    if (changed && syncUser && !isInitialAuthLoading) syncAfterSignIn();
+  }, 0);
+}
+
+async function requestPasswordReset(emailSelector = "#auth-email", statusSelector = "#password-reset-status", buttonSelector = "#forgot-password") {
+  const input = document.querySelector(emailSelector);
+  const status = document.querySelector(statusSelector);
+  const button = document.querySelector(buttonSelector);
+  const email = input.value.trim();
+  if (!email || !input.checkValidity()) {
+    status.textContent = "Bitte gib eine gültige E-Mail-Adresse ein.";
+    input.focus();
+    return;
+  }
+  if (!supabaseClient) {
+    status.textContent = "Die Verbindung ist nicht verfügbar. Bitte lade die Seite neu.";
+    return;
+  }
+  if (button.disabled) return;
+  button.disabled = true;
+  status.textContent = "E-Mail wird angefordert...";
+  try {
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: passwordRecoveryRedirectUrl() });
+    if (error && error.code !== "user_not_found") throw error;
+    status.textContent = "Falls ein Konto zu dieser E-Mail-Adresse existiert, erhältst du einen Link zum Zurücksetzen. Bitte prüfe auch den Spamordner.";
+  } catch (error) {
+    status.textContent = error.status === 429 || error.code === "over_email_send_rate_limit"
+      ? "Zu viele Anfragen. Bitte warte einige Minuten und versuche es erneut."
+      : "Die E-Mail konnte nicht angefordert werden. Bitte prüfe die Verbindung und versuche es erneut.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function updateRecoveryPassword(event) {
+  event.preventDefault();
+  if (!passwordRecoveryActive || !recoveryUserId || recoveryError || recoverySubmitting || recoveryComplete || !supabaseClient) return;
+  const password = document.querySelector("#recovery-password").value;
+  const confirmation = document.querySelector("#recovery-password-confirm").value;
+  const status = document.querySelector("#recovery-status");
+  if (password.length < 6) {
+    status.textContent = "Bitte verwende mindestens 6 Zeichen.";
+    return;
+  }
+  if (password !== confirmation) {
+    status.textContent = "Die beiden Passwörter stimmen nicht überein.";
+    return;
+  }
+  recoverySubmitting = true;
+  document.querySelector("#recovery-save").disabled = true;
+  status.textContent = "Passwort wird geändert...";
+  try {
+    const { data: verified, error: verificationError } = await supabaseClient.auth.getUser();
+    if (verificationError || verified?.user?.id !== recoveryUserId) {
+      recoveryError = "Die Sitzung ist abgelaufen. Bitte fordere einen neuen Link an.";
+      renderPasswordRecovery();
+      return;
+    }
+    const { data, error } = await supabaseClient.auth.updateUser({ password });
+    if (error) throw error;
+    if (data?.user?.id !== recoveryUserId) throw new Error("unexpected_user");
+    syncUser = data.user;
+    recoveryComplete = true;
+    document.querySelector("#recovery-password").value = "";
+    document.querySelector("#recovery-password-confirm").value = "";
+    renderPasswordRecovery();
+  } catch (error) {
+    status.textContent = error.code === "same_password"
+      ? "Bitte wähle ein anderes Passwort als dein bisheriges."
+      : error.code === "weak_password"
+        ? "Dieses Passwort ist zu schwach. Bitte verwende ein längeres Passwort mit unterschiedlichen Zeichen."
+        : "Das Passwort konnte nicht geändert werden. Bitte versuche es erneut oder fordere einen neuen Link an.";
+  } finally {
+    recoverySubmitting = false;
+    document.querySelector("#recovery-save").disabled = false;
+  }
+}
+
+function finishPasswordRecovery() {
+  if (!recoveryComplete) return;
+  try { window.sessionStorage?.removeItem(recoveryStorageKey); } catch (_) {}
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  window.location.replace(url.href);
+}
+
 async function signIn() {
+  if (passwordRecoveryActive) return;
   if (!supabaseClient) return;
   const email = document.querySelector("#auth-email").value.trim();
   const password = document.querySelector("#auth-password").value;
@@ -798,49 +1076,70 @@ async function signIn() {
     setSyncStatus(error.message);
     return;
   }
-  syncUser = data.user;
+  activateUser(data.session?.user || null);
   renderAuth();
   await syncAfterSignIn();
   setView("training");
 }
 
 async function signUp() {
+  if (passwordRecoveryActive) return;
   if (!supabaseClient) return;
   const email = document.querySelector("#auth-email").value.trim();
   const password = document.querySelector("#auth-password").value;
   setSyncStatus("Registriere...");
-  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+  const returnUrl = window.location ? new URL(window.location.href) : null;
+  if (returnUrl) { returnUrl.search = ""; returnUrl.hash = ""; }
+  const options = returnUrl ? { emailRedirectTo: returnUrl.href } : undefined;
+  const { data, error } = await supabaseClient.auth.signUp({ email, password, options });
   if (error) {
     setSyncStatus(error.message);
     return;
   }
-  syncUser = data.user;
+  activateUser(data.session?.user || null);
+  setLastSyncError(null);
   renderAuth();
-  setSyncStatus(data.session ? "Registriert" : "Bitte E-Mail bestätigen");
-  if (data.session) {
+  setSyncStatus(syncUser ? "Registriert" : "Bitte bestätige deine E-Mail und logge dich danach ein.");
+  if (syncUser) {
     await syncAfterSignIn();
     setView("training");
   }
 }
 
 async function signOut() {
+  if (passwordRecoveryActive) return;
   if (!supabaseClient) return;
+  const epoch = accountEpoch;
   await saveRemoteState();
+  if (epoch !== accountEpoch) return;
   await supabaseClient.auth.signOut();
-  syncUser = null;
+  if (epoch === accountEpoch) activateUser(null);
   renderAuth();
+  renderScreen();
 }
 
 async function initSupabaseAuth() {
-  renderAuth();
+  if (passwordRecoveryActive) renderPasswordRecovery();
+  else renderAuth();
   if (!supabaseClient) {
     isInitialAuthLoading = false;
     return;
   }
 
+  supabaseClient.auth.onAuthStateChange(handleAuthStateChange);
   try {
-    const { data } = await supabaseClient.auth.getSession();
-    syncUser = data.session?.user || null;
+    const { data, error } = await supabaseClient.auth.getSession();
+    syncUser = data?.session?.user || null;
+    if (passwordRecoveryActive) {
+      if (error || !syncUser || syncUser.id !== recoveryUserId) {
+        recoveryUserId = null;
+        recoveryError = "Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen Link an.";
+      }
+      renderPasswordRecovery();
+      return;
+    }
+    activateUser(data?.session?.user || null);
+    if (!error && !syncUser) setLastSyncError(null);
     renderAuth();
 
     // The local plan can be shown as soon as the locally stored session is known.
@@ -857,15 +1156,17 @@ async function initSupabaseAuth() {
     } else {
       await registrationPromise;
     }
+  } catch (error) {
+    if (passwordRecoveryActive) {
+      recoveryError = "Der Link konnte nicht geprüft werden. Bitte lade die Seite neu oder fordere einen neuen Link an.";
+      renderPasswordRecovery();
+    } else {
+      setSyncStatus(friendlyErrorMessage(error));
+    }
   } finally {
     isInitialAuthLoading = false;
   }
 
-  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    syncUser = session?.user || null;
-    renderAuth();
-    await loadRegistrationSetting();
-  });
 }
 
 function getCatalogExercise(code) {
@@ -901,6 +1202,10 @@ function defaultContrastSelection() {
 }
 
 async function syncNow() {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState()) return;
+  const userId = activeStateUserId;
+  const epoch = accountEpoch;
   if (!supabaseClient || !syncUser) {
     setSyncStatus("Nicht verbunden");
     return;
@@ -914,6 +1219,7 @@ async function syncNow() {
   try {
     setSyncStatus("Prüfe...");
     const remote = await loadRemoteState();
+    if (!hasBoundUserState(userId, epoch)) return;
     remoteUpdatedAt = remote?.updated_at || null;
     if (remote?.data && remoteChangedSinceLastSync(remote.updated_at)) {
       const confirmed = window.confirm(
@@ -1156,34 +1462,8 @@ function normalizeAppState(rawState) {
 }
 
 function loadState() {
-  const saved = localStorage.getItem(storageKey);
-  if (saved) {
-    return normalizeAppState(JSON.parse(saved));
-  }
-
-  const legacy = localStorage.getItem(legacyKey);
-  if (legacy) {
-    return normalizeAppState(normalizeOldState(JSON.parse(legacy)));
-  }
-
-  const initialState = {
-    activePhase: "training",
-    schedule: structuredClone(defaultSchedule),
-    selectedPhaseId: `phase-training-${defaultSchedule.trainingStartDate}`,
-    phases: dedupePhases([
-      createTrainingPhase(defaultSchedule.trainingStartDate),
-      createContrastPhase(defaultSchedule.contrastStartDate),
-    ]),
-    exerciseModes: structuredClone(defaultExerciseModes),
-    selection: structuredClone(defaultTrainingSelection),
-    contrastSelection: defaultContrastSelection(),
-    contrastLibrary: [],
-    prs: {},
-    trainingSessions: createTrainingSessions(defaultSchedule.trainingStartDate),
-    contrastSessions: createContrastSessions(defaultSchedule.contrastStartDate),
-  };
-  ensureAllSessionExercises(initialState);
-  return initialState;
+  // Only authenticated, user-scoped caches may enter the active plan.
+  return createInitialState();
 }
 
 function createInitialState() {
@@ -1205,6 +1485,9 @@ function createInitialState() {
 }
 
 function saveState({ markDirty = true } = {}) {
+  if (passwordRecoveryActive) return;
+  if (!hasBoundUserState()) return;
+  state.ownerUserId = activeStateUserId;
   rebuildPrs();
   mergeContrastExercisesIntoLibrary(state);
   state.activePhase = currentPhase;
@@ -1225,7 +1508,7 @@ function saveState({ markDirty = true } = {}) {
     state.contrastSelection = firstContrast.contrastSelection;
     state.contrastSessions = firstContrast.sessions;
   }
-  localStorage.setItem(storageKey, JSON.stringify(state));
+  localStorage.setItem(userStorageKey(), JSON.stringify(state));
   if (markDirty) {
     queueRemoteSave();
   }
@@ -1439,6 +1722,8 @@ function renderSetup() {
   const phase = getSelectedPhase();
   const phaseList = document.querySelector("#phase-list");
   const phaseEditor = document.querySelector("#phase-editor");
+  // Keep the shared editor alive when replacing a different account's phase list.
+  if (phaseEditor.parentElement !== phaseList.parentElement) phaseList.before(phaseEditor);
   phaseEditor.hidden = !settingsPhaseOpen;
 
   phaseList.innerHTML = state.phases
@@ -1816,7 +2101,7 @@ function renderExercises() {
           `;
 
       return `
-        <section class="exercise ${isSkipped ? "exercise-skipped" : ""}" data-exercise="${safeCode}">
+        <section class="exercise ${isSkipped ? "exercise-skipped" : ""}" data-exercise="${safeCode}" data-session-owner="${escapeHtml(activeStateUserId)}" data-owner-session="${escapeHtml(session.id)}">
           <div class="exercise-head">
             <div>
               <p class="code">${safeCode}</p>
@@ -1841,7 +2126,7 @@ function renderExercises() {
   form.insertAdjacentHTML(
     "beforeend",
     `
-      <section class="notes">
+      <section class="notes" data-session-owner="${escapeHtml(activeStateUserId)}" data-owner-session="${escapeHtml(session.id)}">
         <label>
           <span>Notizen</span>
           <textarea id="notes" rows="3" placeholder="Gefühl, Technik, Besonderheiten">${escapeHtml(session.notes || "")}</textarea>
@@ -2316,9 +2601,17 @@ function renderStats() {
 }
 
 function renderScreen() {
+  if (passwordRecoveryActive) {
+    renderPasswordRecovery();
+    return;
+  }
   renderGate();
   renderStats();
-  if (!syncUser) return;
+  if (!hasBoundUserState()) {
+    renderEmptyPlan();
+    renderSetup();
+    return;
+  }
   if (!state.phases.length) {
     renderEmptyPlan();
     renderSetup();
@@ -2402,21 +2695,32 @@ function updateAndSave() {
   saveState();
 }
 
+function isCurrentWorkoutTarget(target) {
+  const owner = target?.closest("[data-session-owner]");
+  return Boolean(hasBoundUserState() && owner?.isConnected && owner.dataset.sessionOwner === activeStateUserId
+    && owner.dataset.ownerSession === getCurrentSession()?.id);
+}
+
 function updateWorkoutInputs(event) {
+  if (!isCurrentWorkoutTarget(event.target)) return;
   normalizeBandChoice(event.target);
   updateAndSave();
 }
 
 function updateBandChoiceAfterInteraction(event) {
   const target = event.target;
+  if (!isCurrentWorkoutTarget(target)) return;
   if (!target.closest(".band-controls")) return;
+  const epoch = accountEpoch;
   window.setTimeout(() => {
+    if (epoch !== accountEpoch || !hasBoundUserState()) return;
     normalizeBandChoice(target);
     updateAndSave();
   }, 30);
 }
 
-function refreshContrastHighlight() {
+function refreshContrastHighlight(event) {
+  if (!isCurrentWorkoutTarget(event.target)) return;
   syncFromInputs();
   if (getCurrentSession()?.phase !== "contrast") return;
   renderExercises();
@@ -2695,7 +2999,7 @@ async function resetAppState() {
   selectedPhaseId = position.phaseId || state.phases[0]?.id || null;
   currentPhase = position.phase;
   currentIndex = position.index;
-  localStorage.setItem(storageKey, JSON.stringify(state));
+  if (hasBoundUserState()) localStorage.setItem(userStorageKey(), JSON.stringify(state));
   renderScreen();
   if (syncUser) {
     await overwriteRemoteState(state);
@@ -2704,6 +3008,10 @@ async function resetAppState() {
 }
 
 function setView(view) {
+  if (passwordRecoveryActive) {
+    renderPasswordRecovery();
+    return;
+  }
   if (currentView === "training" && view !== "training") {
     safeSyncFromInputs();
     saveState({ markDirty: false });
@@ -2839,6 +3147,7 @@ document.querySelector("#workout-form").addEventListener("touchend", updateBandC
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-toggle-exercise-skip]");
   if (!button) return;
+  if (!isCurrentWorkoutTarget(button)) return;
   event.preventDefault();
   toggleExerciseSkipped(button.dataset.toggleExerciseSkip);
 });
@@ -2882,6 +3191,10 @@ document.querySelector("#skip-session").addEventListener("click", () => {
   setStatus(getCurrentSession().status === "skipped" ? "planned" : "skipped");
 });
 document.querySelector("#sign-in").addEventListener("click", signIn);
+document.querySelector("#forgot-password").addEventListener("click", () => requestPasswordReset());
+document.querySelector("#recovery-resend").addEventListener("click", () => requestPasswordReset("#recovery-email", "#recovery-request-status", "#recovery-resend"));
+document.querySelector("#recovery-password-form").addEventListener("submit", updateRecoveryPassword);
+document.querySelector("#recovery-finish").addEventListener("click", finishPasswordRecovery);
 document.querySelector("#sign-up").addEventListener("click", signUp);
 document.querySelector("#registration-toggle").addEventListener("change", async (event) => {
   if (syncUser?.email !== registrationAdminEmail) {
