@@ -2156,31 +2156,44 @@ function focusWorkoutEntry(input) {
   input.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
-function navigateWorkoutEntry(event) {
-  if ((event.key !== "Enter" && event.key !== "Tab") || event.isComposing) return;
-  const current = event.target.closest("input[data-workout-entry]");
+function advanceWorkoutEntry(current, direction, event, finishAtEnd = true) {
   if (!current || !isCurrentWorkoutTarget(current)) return;
 
   const inputs = workoutEntryInputs();
   const currentIndex = inputs.indexOf(current);
   if (currentIndex < 0) return;
 
-  const direction = event.key === "Tab" && event.shiftKey ? -1 : 1;
   const next = inputs[currentIndex + direction];
   if (!next) {
-    if (event.key === "Enter") {
-      event.preventDefault();
+    if (direction > 0 && finishAtEnd) {
+      event?.preventDefault();
       current.blur();
     }
     return;
   }
 
-  event.preventDefault();
+  event?.preventDefault();
   workoutKeyboardNavigationActive = true;
   focusWorkoutEntry(next);
   window.setTimeout(() => {
     workoutKeyboardNavigationActive = false;
   }, 0);
+}
+
+function navigateWorkoutEntry(event) {
+  if (event.isComposing) return;
+  const isTab = event.key === "Tab";
+  const isEnter = event.key === "Enter" || event.code === "Enter" || event.keyCode === 13 || event.which === 13
+    || event.inputType === "insertLineBreak" || event.inputType === "insertParagraph";
+  if (!isTab && !isEnter) return;
+  const current = event.target.closest("input[data-workout-entry]");
+  advanceWorkoutEntry(current, isTab && event.shiftKey ? -1 : 1, event, isEnter);
+}
+
+function submitWorkoutEntry(event) {
+  const current = document.activeElement?.closest?.("input[data-workout-entry]");
+  if (!current || !isCurrentWorkoutTarget(current)) return;
+  advanceWorkoutEntry(current, 1, event);
 }
 
 function highlightedSetIndex(session, meta, entry) {
@@ -3191,6 +3204,8 @@ document.querySelector("#toggle-exercise-modes").addEventListener("click", () =>
 document.querySelector("#workout-form").addEventListener("input", updateWorkoutInputs);
 document.querySelector("#workout-form").addEventListener("change", updateWorkoutInputs);
 document.querySelector("#workout-form").addEventListener("keydown", navigateWorkoutEntry);
+document.querySelector("#workout-form").addEventListener("beforeinput", navigateWorkoutEntry);
+document.querySelector("#workout-form").addEventListener("submit", submitWorkoutEntry);
 document.querySelector("#workout-form").addEventListener("focusout", refreshContrastHighlight);
 document.querySelector("#workout-form").addEventListener("pointerup", updateBandChoiceAfterInteraction);
 document.querySelector("#workout-form").addEventListener("touchend", updateBandChoiceAfterInteraction);

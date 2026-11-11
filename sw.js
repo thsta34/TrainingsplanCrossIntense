@@ -1,9 +1,9 @@
-const CACHE_NAME = "training-plan-v119";
+const CACHE_NAME = "training-plan-v120";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css?v=118",
-  "./app.js?v=119",
+  "./app.js?v=120",
   "./manifest.webmanifest",
   "./CIT_Logo-Schwarz.png",
   "./favicon.ico",
