@@ -53,6 +53,7 @@ let recoveryUserId = recoveryState.userId;
 let recoveryError = recoveryState.error;
 let recoveryComplete = false;
 let recoverySubmitting = false;
+let workoutKeyboardNavigationActive = false;
 const supabaseClient = window.supabase?.createClient(supabaseUrl, supabaseKey);
 const formatter = new Intl.NumberFormat("de-CH", { maximumFractionDigits: 2 });
 let syncUser = null;
@@ -2093,7 +2094,7 @@ function renderExercises() {
           ? `
             <label>
               <span>Stange</span>
-              <input type="number" inputmode="decimal" min="0" step="0.25" name="${safeCode}-bar" value="${escapeHtml(entry.bar)}" data-bar="${safeCode}" ${isSkipped ? "disabled" : ""} />
+              <input type="number" inputmode="decimal" min="0" step="0.25" name="${safeCode}-bar" value="${escapeHtml(entry.bar)}" data-workout-entry data-bar="${safeCode}" ${isSkipped ? "disabled" : ""} />
             </label>
           `
           : `
@@ -2134,6 +2135,52 @@ function renderExercises() {
       </section>
     `,
   );
+  configureWorkoutEntryHints();
+}
+
+function workoutEntryInputs() {
+  return Array.from(document.querySelectorAll("#workout-form input[data-workout-entry]"))
+    .filter((input) => !input.disabled && input.getClientRects().length > 0);
+}
+
+function configureWorkoutEntryHints() {
+  const inputs = workoutEntryInputs();
+  inputs.forEach((input, index) => {
+    input.enterKeyHint = index === inputs.length - 1 ? "done" : "next";
+  });
+}
+
+function focusWorkoutEntry(input) {
+  input.focus({ preventScroll: true });
+  input.select?.();
+  input.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+function navigateWorkoutEntry(event) {
+  if ((event.key !== "Enter" && event.key !== "Tab") || event.isComposing) return;
+  const current = event.target.closest("input[data-workout-entry]");
+  if (!current || !isCurrentWorkoutTarget(current)) return;
+
+  const inputs = workoutEntryInputs();
+  const currentIndex = inputs.indexOf(current);
+  if (currentIndex < 0) return;
+
+  const direction = event.key === "Tab" && event.shiftKey ? -1 : 1;
+  const next = inputs[currentIndex + direction];
+  if (!next) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      current.blur();
+    }
+    return;
+  }
+
+  event.preventDefault();
+  workoutKeyboardNavigationActive = true;
+  focusWorkoutEntry(next);
+  window.setTimeout(() => {
+    workoutKeyboardNavigationActive = false;
+  }, 0);
 }
 
 function highlightedSetIndex(session, meta, entry) {
@@ -2145,7 +2192,7 @@ function highlightedSetIndex(session, meta, entry) {
 function renderRepsInput(meta, index, reps, disabled) {
   return `
     <label class="side-input reps-input" aria-label="${escapeHtml(meta.code)} Satz ${index + 1} Wiederholungen">
-      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${escapeHtml(normalizeReps(reps))}" data-reps data-exercise="${escapeHtml(meta.code)}" data-set-index="${index}" ${disabled ? "disabled" : ""} />
+      <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${escapeHtml(normalizeReps(reps))}" data-workout-entry data-reps data-exercise="${escapeHtml(meta.code)}" data-set-index="${index}" ${disabled ? "disabled" : ""} />
       <span>Wdh.</span>
     </label>
   `;
@@ -2172,6 +2219,7 @@ function renderSetRow(meta, value, index, highlightedSet = 2, disabled = false, 
           min="0"
           step="0.25"
           value="${escapeHtml(value)}"
+          data-workout-entry
           data-exercise="${escapeHtml(meta.code)}"
           data-set="${index}"
           ${disabled ? "disabled" : ""}
@@ -2192,7 +2240,7 @@ function renderKettlebellSetRow(meta, value, index, highlightedSet = 2, disabled
       <div class="set-number">Satz ${setNumber}</div>
       <div class="kettlebell-controls" data-exercise="${escapeHtml(meta.code)}" data-set="${index}">
         <label class="side-input" aria-label="${escapeHtml(meta.code)} Satz ${setNumber} Gewicht pro Kettlebell">
-          <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.weight)}" data-kettlebell-weight ${disabled ? "disabled" : ""} />
+          <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.weight)}" data-workout-entry data-kettlebell-weight ${disabled ? "disabled" : ""} />
           <span>kg pro Kettlebell</span>
         </label>
         <label class="kettlebell-count">
@@ -2243,7 +2291,7 @@ function renderBandSetRow(meta, value, index, highlightedSet = 2, disabled = fal
         ` : ""}
         <label class="band-extra">
           <span>${supportsCablePull ? "Zusatz / KZ" : "Zusatz"}</span>
-          <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.extraWeight)}" data-band-extra ${disabled ? "disabled" : ""} />
+          <input type="number" inputmode="decimal" min="0" step="0.25" value="${escapeHtml(value.extraWeight)}" data-workout-entry data-band-extra ${disabled ? "disabled" : ""} />
         </label>
         ${renderRepsInput(meta, index, reps, disabled)}
       </div>
@@ -2721,6 +2769,7 @@ function updateBandChoiceAfterInteraction(event) {
 
 function refreshContrastHighlight(event) {
   if (!isCurrentWorkoutTarget(event.target)) return;
+  if (workoutKeyboardNavigationActive) return;
   syncFromInputs();
   if (getCurrentSession()?.phase !== "contrast") return;
   renderExercises();
@@ -3141,6 +3190,7 @@ document.querySelector("#toggle-exercise-modes").addEventListener("click", () =>
 
 document.querySelector("#workout-form").addEventListener("input", updateWorkoutInputs);
 document.querySelector("#workout-form").addEventListener("change", updateWorkoutInputs);
+document.querySelector("#workout-form").addEventListener("keydown", navigateWorkoutEntry);
 document.querySelector("#workout-form").addEventListener("focusout", refreshContrastHighlight);
 document.querySelector("#workout-form").addEventListener("pointerup", updateBandChoiceAfterInteraction);
 document.querySelector("#workout-form").addEventListener("touchend", updateBandChoiceAfterInteraction);
